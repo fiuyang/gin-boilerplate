@@ -1,0 +1,3 @@
+DROP TABLE IF EXISTS customers;
+ALTER TABLE customers
+DROP CONSTRAINT IF EXISTS unique_email;
