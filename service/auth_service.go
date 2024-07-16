@@ -45,17 +45,17 @@ func (service *AuthServiceImpl) Login(ctx context.Context, request entity.LoginR
 
 	data, err := service.userRepo.FindByColumns(ctx, []string{"email"}, []any{request.Email})
 	if err != nil {
-		return "", exception.NewBadRequestError("email or password is wrong")
+		return "", exception.NewBadRequestHandler("email or password is wrong")
 	}
 
 	config, err := config.LoadConfig(".")
 	if err != nil {
-		panic(exception.NewInternalServerError(err.Error()))
+		panic(exception.NewInternalServerErrorHandler(err.Error()))
 	}
 
 	err = utils.VerifyPassword(data.Password, request.Password)
 	if err != nil {
-		return "", exception.NewBadRequestError("email or password is wrong")
+		return "", exception.NewBadRequestHandler("email or password is wrong")
 	}
 
 	// Generate Token
@@ -80,7 +80,7 @@ func (service *AuthServiceImpl) Register(ctx context.Context, request entity.Cre
 
 	err = service.userRepo.Insert(ctx, dataset)
 	if err != nil {
-		panic(exception.NewInternalServerError(err.Error()))
+		panic(exception.NewInternalServerErrorHandler(err.Error()))
 	}
 }
 
@@ -100,7 +100,7 @@ func (service *AuthServiceImpl) ForgotPassword(ctx context.Context, request enti
 
 	data, err := service.userRepo.FindByColumns(ctx, []string{"email"}, []any{request.Email})
 	if err != nil {
-		panic(exception.NewNotFoundError(err.Error()))
+		panic(exception.NewNotFoundHandler(err.Error()))
 	}
 
 	otp := utils.GenerateOTP(4)
@@ -114,7 +114,10 @@ func (service *AuthServiceImpl) ForgotPassword(ctx context.Context, request enti
 		CreatedAt: time.Now().Add(time.Minute * 5),
 	}
 
-	service.passResetRepo.Insert(ctx, dataset)
+	err = service.passResetRepo.Insert(ctx, dataset)
+	if err != nil {
+		return "", exception.NewInternalServerErrorHandler(err.Error())
+	}
 
 	emailData := utils.EmailData{
 		Otp:     otp,
@@ -133,7 +136,7 @@ func (service *AuthServiceImpl) CheckOtp(ctx context.Context, request entity.Che
 
 	data, err := service.passResetRepo.FindByColumns(ctx, []string{"otp"}, []any{request.Otp})
 	if err != nil {
-		panic(exception.NewNotFoundError(err.Error()))
+		panic(exception.NewNotFoundHandler(err.Error()))
 	}
 
 	if request.Otp != data.Otp {
@@ -153,7 +156,7 @@ func (service *AuthServiceImpl) ResetPassword(ctx context.Context, request entit
 
 	data, err := service.passResetRepo.FindByColumns(ctx, []string{"otp"}, []any{request.Otp})
 	if err != nil {
-		panic(exception.NewNotFoundError(err.Error()))
+		panic(exception.NewNotFoundHandler(err.Error()))
 	}
 
 	if request.Otp != data.Otp {
@@ -172,9 +175,15 @@ func (service *AuthServiceImpl) ResetPassword(ctx context.Context, request entit
 		Password: hashedPassword,
 	}
 
-	service.userRepo.Update(ctx, dataset)
+	err = service.userRepo.Update(ctx, dataset)
+	if err != nil {
+		return "", exception.NewNotFoundHandler(err.Error())
+	}
 
-	service.passResetRepo.DeleteByColumns(ctx, []string{"otp"}, []any{data.Otp})
+	err = service.passResetRepo.DeleteByColumns(ctx, []string{"otp"}, []any{data.Otp})
+	if err != nil {
+		return "", exception.NewNotFoundHandler(err.Error())
+	}
 
-	return "", nil
+	return "Reset Password Successful", nil
 }

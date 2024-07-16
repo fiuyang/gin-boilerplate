@@ -21,12 +21,12 @@ func ConnectionDB(config *Config) *gorm.DB {
 	})
 
 	if err != nil {
-		panic(exception.NewInternalServerError(err.Error()))
+		panic(exception.NewInternalServerErrorHandler(err.Error()))
 	}
 
 	connection, err := db.DB()
 	if err != nil {
-		panic(exception.NewInternalServerError(err.Error()))
+		panic(exception.NewInternalServerErrorHandler(err.Error()))
 	}
 
 	connection.SetMaxIdleConns(10)

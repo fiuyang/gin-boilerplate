@@ -53,7 +53,7 @@ func (service *CustomerServiceImpl) Create(ctx context.Context, request entity.C
 
 	err = service.customerRepo.Insert(ctx, dataset)
 	if err != nil {
-		panic(exception.NewInternalServerError(err.Error()))
+		panic(exception.NewInternalServerErrorHandler(err.Error()))
 	}
 
 	return nil
@@ -78,7 +78,7 @@ func (service *CustomerServiceImpl) CreateBatch(ctx context.Context, request ent
 
 	err = service.customerRepo.InsertBatch(ctx, customers, batchSize)
 	if err != nil {
-		panic(exception.NewInternalServerError(err.Error()))
+		panic(exception.NewInternalServerErrorHandler(err.Error()))
 	}
 }
 
@@ -88,7 +88,7 @@ func (service *CustomerServiceImpl) Update(ctx context.Context, request entity.U
 
 	dataset, err := service.customerRepo.FindById(ctx, request.ID)
 	if err != nil {
-		panic(exception.NewNotFoundError(err.Error()))
+		panic(exception.NewNotFoundHandler(err.Error()))
 	}
 
 	dataset.Username = request.Username
@@ -96,21 +96,27 @@ func (service *CustomerServiceImpl) Update(ctx context.Context, request entity.U
 	dataset.Phone = request.Phone
 	dataset.Address = request.Address
 
-	service.customerRepo.Update(ctx, dataset)
+	err = service.customerRepo.Update(ctx, dataset)
+	if err != nil {
+		panic(exception.NewNotFoundHandler(err.Error()))
+	}
 }
 
 func (service *CustomerServiceImpl) DeleteBatch(ctx context.Context, request entity.DeleteBatchCustomerRequest) {
 	err := service.validate.Struct(request)
 	helper.ErrorPanic(err)
 
-	service.customerRepo.DeleteBatch(ctx, request.ID)
+	err = service.customerRepo.DeleteBatch(ctx, request.ID)
+	if err != nil {
+		panic(exception.NewNotFoundHandler(err.Error()))
+	}
 }
 
 func (service *CustomerServiceImpl) FindById(ctx context.Context, request entity.CustomerParams) (response entity.CustomerResponse) {
 	result, err := service.customerRepo.FindById(ctx, request.CustomerId)
 
 	if err != nil {
-		panic(exception.NewNotFoundError(err.Error()))
+		panic(exception.NewNotFoundHandler(err.Error()))
 	}
 
 	helper.Automapper(result, &response)
@@ -121,7 +127,7 @@ func (service *CustomerServiceImpl) FindAll(ctx context.Context, dataFilter enti
 	result, err := service.customerRepo.FindAll(ctx, dataFilter)
 
 	if err != nil {
-		panic(exception.NewInternalServerError(err.Error()))
+		panic(exception.NewInternalServerErrorHandler(err.Error()))
 	}
 
 	for _, row := range result {
@@ -188,7 +194,7 @@ func (service *CustomerServiceImpl) Export(ctx context.Context, dataFilter entit
 
 	result, err := service.customerRepo.FindAll(ctx, dataFilter)
 	if err != nil {
-		panic(exception.NewInternalServerError(err.Error()))
+		panic(exception.NewInternalServerErrorHandler(err.Error()))
 	}
 
 	dataStyle := xlsx.NewStyle()
@@ -235,27 +241,27 @@ func (service *CustomerServiceImpl) Export(ctx context.Context, dataFilter entit
 func (service *CustomerServiceImpl) Import(ctx context.Context, file *multipart.FileHeader) error {
 	src, err := file.Open()
 	if err != nil {
-		return exception.NewInternalServerError(err.Error())
+		panic(exception.NewInternalServerErrorHandler(err.Error()))
 	}
 	defer src.Close()
 
 	xlFile, err := xlsx.OpenReaderAt(src, file.Size)
 	if err != nil {
-		return exception.NewInternalServerError(err.Error())
+		panic(exception.NewInternalServerErrorHandler(err.Error()))
 	}
 
 	sheet := xlFile.Sheets[0]
 
 	// Create channels for error handling and synchronization
 	errorChan := make(chan error)
-	validationExcel := exception.ValidationExcel{}
+	excelValidation := exception.ExcelValidation{}
 	wg := sync.WaitGroup{}
 
 	// Track unique fields to ensure no duplicates within the same file
 	uniqueTracker := make(map[string]map[string]bool)
 
-	for colIndex := range helper.UniqueCustomer {
-		uniqueTracker[helper.UniqueCustomer[colIndex]] = make(map[string]bool)
+	for colIndex := range helper.UniqueExcelCustomer {
+		uniqueTracker[helper.UniqueExcelCustomer[colIndex]] = make(map[string]bool)
 	}
 
 	for rowIndex, row := range sheet.Rows {
@@ -269,27 +275,27 @@ func (service *CustomerServiceImpl) Import(ctx context.Context, file *multipart.
 			defer wg.Done()
 
 			// Validate each cell dynamically
-			for colIndex, errorMsg := range helper.ColumnCustomer {
+			for colIndex, errorMsg := range helper.ColumnExcelCustomer {
 				if colIndex < len(row.Cells) {
 					cell := row.Cells[colIndex]
 					if cell.String() == "" {
 						fieldName := sheet.Rows[0].Cells[colIndex].String()
-						validationExcel.Add(fieldName, rowIndex, errorMsg)
+						excelValidation.AddHandler(fieldName, rowIndex, errorMsg)
 					}
 				}
 			}
 
 			// If there are validation errors, skip further processing for this row
-			if len(validationExcel.Errors) > 0 {
+			if len(excelValidation.Errors) > 0 {
 				return
 			}
 
 			// Check uniqueness within the file
-			for colIndex, fieldName := range helper.UniqueCustomer {
+			for colIndex, fieldName := range helper.UniqueExcelCustomer {
 				if colIndex < len(row.Cells) {
 					cell := row.Cells[colIndex]
 					if uniqueTracker[fieldName][cell.String()] {
-						validationExcel.Add(fieldName, rowIndex, fmt.Sprintf("%s '%s' is not unique", fieldName, cell.String()))
+						excelValidation.AddHandler(fieldName, rowIndex, fmt.Sprintf("%s '%s' is not unique", fieldName, cell.String()))
 						return
 					}
 					uniqueTracker[fieldName][cell.String()] = true
@@ -297,12 +303,12 @@ func (service *CustomerServiceImpl) Import(ctx context.Context, file *multipart.
 			}
 
 			// Check uniqueness in the database
-			for colIndex, fieldName := range helper.UniqueCustomer {
+			for colIndex, fieldName := range helper.UniqueExcelCustomer {
 				if colIndex < len(row.Cells) {
 					cell := row.Cells[1]
 					data := service.customerRepo.CheckColumnExists(ctx, fieldName, cell.String())
 					if data != false {
-						validationExcel.Add(fieldName, rowIndex+1, fmt.Sprintf("%s '%s' already taken", fieldName, cell.String()))
+						excelValidation.AddHandler(fieldName, rowIndex+1, fmt.Sprintf("%s '%s' already taken", fieldName, cell.String()))
 						return
 					}
 				}
@@ -323,7 +329,10 @@ func (service *CustomerServiceImpl) Import(ctx context.Context, file *multipart.
 				}
 			}
 
-			service.customerRepo.Insert(ctx, customer)
+			err := service.customerRepo.Insert(ctx, customer)
+			if err != nil {
+				panic(exception.NewInternalServerErrorHandler(err.Error()))
+			}
 
 		}(rowIndex, row)
 	}
@@ -334,11 +343,11 @@ func (service *CustomerServiceImpl) Import(ctx context.Context, file *multipart.
 	}()
 
 	for err := range errorChan {
-		return exception.NewInternalServerError(err.Error())
+		return exception.NewInternalServerErrorHandler(err.Error())
 	}
 
-	if len(validationExcel.Errors) > 0 {
-		return &validationExcel
+	if len(excelValidation.Errors) > 0 {
+		return &excelValidation
 	}
 
 	return nil

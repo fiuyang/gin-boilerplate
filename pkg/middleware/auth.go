@@ -20,37 +20,37 @@ func JwtMiddleware() gin.HandlerFunc {
 		}
 
 		if token == "" {
-			panic(exception.NewUnauthorizedError("empty token"))
+			panic(exception.NewUnauthorizedHandler("empty token"))
 			return
 		}
 
 		if utils.IsTokenBlacklisted(token) {
-			panic(exception.NewUnauthorizedError("token has been blacklisted"))
+			panic(exception.NewUnauthorizedHandler("token has been blacklisted"))
 			return
 		}
 
 		config, err := config.LoadConfig(".")
 		if err != nil {
-			panic(exception.NewInternalServerError(err.Error()))
+			panic(exception.NewInternalServerErrorHandler(err.Error()))
 			return
 		}
 
 		sub, err := utils.ValidateToken(token, config.TokenSecret)
 		if err != nil {
-			panic(exception.NewUnauthorizedError(err.Error()))
+			panic(exception.NewUnauthorizedHandler(err.Error()))
 			//ctx.AbortWithStatusJSON(401, gin.H{"error": err.Error()})
 			return
 		}
 
 		claims, ok := sub.(map[string]interface{})
 		if !ok {
-			panic(exception.NewUnauthorizedError("invalid token claims"))
+			panic(exception.NewUnauthorizedHandler("invalid token claims"))
 			return
 		}
 
 		email, ok := claims["email"].(string)
 		if !ok {
-			panic(exception.NewUnauthorizedError("email not found in token claims"))
+			panic(exception.NewUnauthorizedHandler("email not found in token claims"))
 			return
 		}
 

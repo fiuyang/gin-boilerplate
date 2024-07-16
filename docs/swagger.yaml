@@ -508,9 +508,9 @@ paths:
         in: query
         name: username
         type: string
-      - description: username
+      - description: email
         in: query
-        name: username
+        name: email
         type: string
       - description: end_date
         in: query

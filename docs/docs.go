@@ -417,8 +417,8 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "username",
-                        "name": "username",
+                        "description": "email",
+                        "name": "email",
                         "in": "query"
                     },
                     {

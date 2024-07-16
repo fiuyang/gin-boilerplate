@@ -4,7 +4,7 @@ type NotFoundErrorStruct struct {
 	ErrorMsg string
 }
 
-func NewNotFoundError(msg string) *NotFoundErrorStruct {
+func NewNotFoundHandler(msg string) *NotFoundErrorStruct {
 	return &NotFoundErrorStruct{
 		ErrorMsg: msg,
 	}

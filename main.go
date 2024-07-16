@@ -13,7 +13,7 @@ import (
 	"scylla/pkg/helper"
 	"scylla/pkg/utils"
 	"scylla/repository"
-	"scylla/router"
+	"scylla/routes"
 	"scylla/service"
 	"time"
 )
@@ -30,7 +30,7 @@ func main() {
 
 	loadConfig, err := config.LoadConfig(".")
 	if err != nil {
-		panic(exception.NewInternalServerError(err.Error()))
+		panic(exception.NewInternalServerErrorHandler(err.Error()))
 	}
 
 	//Database
@@ -63,8 +63,8 @@ func main() {
 	customerController := controller.NewCustomerController(customerService)
 	userController := controller.NewUserController(userSevice)
 
-	//Router
-	routes := router.NewRouter(
+	//routes v1
+	routesV1 := routes.NewRoutesV1(
 		authController,
 		customerController,
 		userController,
@@ -72,7 +72,8 @@ func main() {
 
 	app := gin.Default()
 	app.Use(gin.Logger())
-	app.Use(gin.CustomRecovery(exception.ErrorHandlers))
+	app.Use(gin.Recovery())
+	app.Use(gin.CustomRecovery(exception.ExceptionHandlers))
 
 	//docs swagger
 	app.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
@@ -88,7 +89,7 @@ func main() {
 	}))
 
 	app.Use(func(c *gin.Context) {
-		routes.ServeHTTP(c.Writer, c.Request)
+		routesV1.ServeHTTP(c.Writer, c.Request)
 	})
 
 	server := &http.Server{

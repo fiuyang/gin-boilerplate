@@ -9,10 +9,10 @@ import (
 )
 
 type PassResetRepo interface {
-	Insert(ctx context.Context, data model.PasswordReset)
+	Insert(ctx context.Context, data model.PasswordReset) error
 	InsertBatch(ctx context.Context, data []model.PasswordReset, batchSize int) error
 	Update(ctx context.Context, data model.PasswordReset) error
-	DeleteByColumns(ctx context.Context, columns []string, queries []any) (model.PasswordReset, error)
+	DeleteByColumns(ctx context.Context, columns []string, queries []any) error
 	DeleteBatch(ctx context.Context, Ids []int) error
 	FindById(ctx context.Context, Id int) (data model.PasswordReset, err error)
 	FindByColumns(ctx context.Context, columns []string, queries []any) (model.PasswordReset, error)
@@ -26,9 +26,12 @@ func NewPassResetRepoImpl(db *gorm.DB) PassResetRepo {
 	return &PassResetRepoImpl{db: db}
 }
 
-func (repo *PassResetRepoImpl) Insert(ctx context.Context, data model.PasswordReset) {
+func (repo *PassResetRepoImpl) Insert(ctx context.Context, data model.PasswordReset) error {
 	result := repo.db.WithContext(ctx).Create(&data)
-	helper.ErrorPanic(result.Error)
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil
 }
 
 func (repo *PassResetRepoImpl) InsertBatch(ctx context.Context, data []model.PasswordReset, batchSize int) error {
@@ -61,9 +64,9 @@ func (repo *PassResetRepoImpl) Update(ctx context.Context, data model.PasswordRe
 	return nil
 }
 
-func (repo *PassResetRepoImpl) DeleteByColumns(ctx context.Context, columns []string, queries []any) (model.PasswordReset, error) {
+func (repo *PassResetRepoImpl) DeleteByColumns(ctx context.Context, columns []string, queries []any) error {
 	if len(columns) != len(queries) {
-		return model.PasswordReset{}, errors.New("columns and queries length mismatch")
+		return errors.New("columns and queries length mismatch")
 	}
 
 	var data model.PasswordReset
@@ -74,14 +77,14 @@ func (repo *PassResetRepoImpl) DeleteByColumns(ctx context.Context, columns []st
 	result := db.Delete(&data)
 
 	if result.RowsAffected == 0 {
-		return data, errors.New("record not found")
+		return errors.New("record not found")
 	}
 
 	if result.Error != nil {
-		return data, errors.New("users not found")
+		return result.Error
 	}
 
-	return data, nil
+	return nil
 }
 
 func (repo *PassResetRepoImpl) DeleteBatch(ctx context.Context, Ids []int) error {

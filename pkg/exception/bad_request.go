@@ -4,7 +4,7 @@ type BadRequestErrorStruct struct {
 	ErrorMsg string
 }
 
-func NewBadRequestError(msg string) *BadRequestErrorStruct {
+func NewBadRequestHandler(msg string) *BadRequestErrorStruct {
 	return &BadRequestErrorStruct{
 		ErrorMsg: msg,
 	}

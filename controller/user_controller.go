@@ -25,7 +25,7 @@ func NewUserController(userService service.UserService) *UserController {
 	}
 }
 
-// CreateTags		godoc
+// Note		godoc
 //
 //	@Summary		Create user
 //	@Description	Create user.
@@ -59,7 +59,7 @@ func (controller *UserController) Create(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, webResponse)
 }
 
-// UpdateTags		godoc
+// Note		godoc
 //
 //	@Summary		Update user
 //	@Description	Update user.
@@ -84,7 +84,7 @@ func (controller *UserController) Update(ctx *gin.Context) {
 	var params entity.UserParams
 
 	if err := ctx.ShouldBindUri(&params); err != nil {
-		panic(exception.NewBadRequestError(err.Error()))
+		panic(exception.NewBadRequestHandler(err.Error()))
 	}
 
 	request.ID = params.UserId
@@ -102,7 +102,7 @@ func (controller *UserController) Update(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, webResponse)
 }
 
-// DeleteTags		godoc
+// Note		godoc
 //
 //	@Summary		Delete batch user
 //	@Description	Delete batch user.
@@ -136,7 +136,7 @@ func (controller *UserController) DeleteBatch(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, webResponse)
 }
 
-// FindByIdTags 		godoc
+// Note 		godoc
 //
 //	@Summary		Get user by id.
 //	@Description	Get user by id.
@@ -156,7 +156,7 @@ func (controller *UserController) FindById(ctx *gin.Context) {
 	var params entity.UserParams
 
 	if err := ctx.ShouldBindUri(&params); err != nil {
-		panic(exception.NewBadRequestError(err.Error()))
+		panic(exception.NewBadRequestHandler(err.Error()))
 	}
 
 	response := controller.userService.FindById(c, params)
@@ -171,7 +171,7 @@ func (controller *UserController) FindById(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, webResponse)
 }
 
-// CreateTags		godoc
+// Note		godoc
 //
 //	@Summary		Get all users.
 //	@Description	Get all users.
@@ -194,7 +194,7 @@ func (controller *UserController) FindAll(ctx *gin.Context) {
 	var dataFilter entity.UserQueryFilter
 
 	if err := ctx.ShouldBindQuery(&dataFilter); err != nil {
-		panic(exception.NewBadRequestError(err.Error()))
+		panic(exception.NewBadRequestHandler(err.Error()))
 	}
 
 	response := controller.userService.FindAll(c, dataFilter)
@@ -209,7 +209,7 @@ func (controller *UserController) FindAll(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, webResponse)
 }
 
-// ExportTags 		    godoc
+// Note 		    godoc
 //
 //	@Summary		Export Excel user.
 //	@Description	Export Excel user.
@@ -233,7 +233,7 @@ func (controller *UserController) Export(ctx *gin.Context) {
 	var dataFilter entity.UserQueryFilter
 
 	if err := ctx.ShouldBindQuery(&dataFilter); err != nil {
-		panic(exception.NewBadRequestError(err.Error()))
+		panic(exception.NewBadRequestHandler(err.Error()))
 	}
 
 	filePath, err := controller.userService.Export(c, dataFilter)
@@ -253,7 +253,7 @@ func (controller *UserController) Export(ctx *gin.Context) {
 	ctx.Data(http.StatusOK, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", data)
 }
 
-// ImportTags 		    godoc
+//	 Note 		    godoc
 //
 //	@Summary		Import Excel user.
 //	@Description	Import Excel user.
@@ -272,7 +272,7 @@ func (controller *UserController) Import(ctx *gin.Context) {
 
 	file, err := ctx.FormFile("file")
 	if err != nil {
-		panic(exception.NewBadRequestError(err.Error()))
+		panic(exception.NewBadRequestHandler(err.Error()))
 	}
 
 	// Call the usersService method to handle the import

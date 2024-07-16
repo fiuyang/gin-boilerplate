@@ -54,7 +54,7 @@ func (service *UserServiceImpl) Create(ctx context.Context, request entity.Creat
 
 	err = service.userRepo.Insert(ctx, dataset)
 	if err != nil {
-		panic(exception.NewInternalServerError(err.Error()))
+		panic(exception.NewInternalServerErrorHandler(err.Error()))
 	}
 
 }
@@ -65,7 +65,7 @@ func (service *UserServiceImpl) Update(ctx context.Context, request entity.Updat
 
 	dataset, err := service.userRepo.FindById(ctx, request.ID)
 	if err != nil {
-		panic(exception.NewNotFoundError(err.Error()))
+		panic(exception.NewNotFoundHandler(err.Error()))
 	}
 
 	if dataset.Password != "" {
@@ -76,21 +76,27 @@ func (service *UserServiceImpl) Update(ctx context.Context, request entity.Updat
 	dataset.Username = request.Username
 	dataset.Email = request.Email
 
-	service.userRepo.Update(ctx, dataset)
+	err = service.userRepo.Update(ctx, dataset)
+	if err != nil {
+		panic(exception.NewNotFoundHandler(err.Error()))
+	}
 }
 
 func (service *UserServiceImpl) DeleteBatch(ctx context.Context, request entity.DeleteBatchUserRequest) {
 	err := service.validate.Struct(request)
 	helper.ErrorPanic(err)
 
-	service.userRepo.DeleteBatch(ctx, request.ID)
+	err = service.userRepo.DeleteBatch(ctx, request.ID)
+	if err != nil {
+		panic(exception.NewNotFoundHandler(err.Error()))
+	}
 }
 
 func (service *UserServiceImpl) FindAll(ctx context.Context, dataFilter entity.UserQueryFilter) (response []entity.UserResponse) {
 	result, err := service.userRepo.FindAll(ctx, dataFilter)
 
 	if err != nil {
-		panic(exception.NewInternalServerError(err.Error()))
+		panic(exception.NewInternalServerErrorHandler(err.Error()))
 	}
 
 	for _, row := range result {
@@ -105,7 +111,7 @@ func (service *UserServiceImpl) FindById(ctx context.Context, params entity.User
 	result, err := service.userRepo.FindById(ctx, params.UserId)
 
 	if err != nil {
-		panic(exception.NewNotFoundError(err.Error()))
+		panic(exception.NewNotFoundHandler(err.Error()))
 	}
 
 	helper.Automapper(result, &response)
@@ -134,7 +140,7 @@ func (service *UserServiceImpl) Export(ctx context.Context, dataFilter entity.Us
 
 	users, err := service.userRepo.FindAll(ctx, dataFilter)
 	if err != nil {
-		panic(exception.NewInternalServerError(err.Error()))
+		panic(exception.NewInternalServerErrorHandler(err.Error()))
 	}
 
 	dataStyle := xlsx.NewStyle()
@@ -177,25 +183,25 @@ func (service *UserServiceImpl) Export(ctx context.Context, dataFilter entity.Us
 func (service *UserServiceImpl) Import(ctx context.Context, file *multipart.FileHeader) error {
 	src, err := file.Open()
 	if err != nil {
-		return exception.NewInternalServerError(err.Error())
+		panic(exception.NewInternalServerErrorHandler(err.Error()))
 	}
 	defer src.Close()
 
 	xlFile, err := xlsx.OpenReaderAt(src, file.Size)
 	if err != nil {
-		return exception.NewInternalServerError(err.Error())
+		panic(exception.NewInternalServerErrorHandler(err.Error()))
 	}
 
 	sheet := xlFile.Sheets[0]
 
 	// Create channels for error handling and synchronization
 	errorChan := make(chan error)
-	validationExcel := exception.NewValidationExcelError{}
+	excelValidation := exception.NewExcelValidationError{}
 	wg := sync.WaitGroup{}
 
 	uniqueTracker := make(map[string]map[string]bool)
 
-	for _, rule := range helper.RulesUser {
+	for _, rule := range helper.RulesExcelUser {
 		fieldName := strings.Split(rule, ",")[0]
 		uniqueTracker[fieldName] = make(map[string]bool)
 	}
@@ -213,7 +219,7 @@ func (service *UserServiceImpl) Import(ctx context.Context, file *multipart.File
 			rowErrors := map[string][]string{}
 
 			// Validate each cell dynamically
-			for colIndex, rule := range helper.RulesUser {
+			for colIndex, rule := range helper.RulesExcelUser {
 				fields := strings.Split(rule, ",")
 				fieldName := fields[0]
 				cell := row.Cells[colIndex]
@@ -239,14 +245,14 @@ func (service *UserServiceImpl) Import(ctx context.Context, file *multipart.File
 			if len(rowErrors) > 0 {
 				for field, errs := range rowErrors {
 					for _, err := range errs {
-						validationExcel.Add(field, rowIndex+1, err)
+						excelValidation.AddHandler(field, rowIndex+1, err)
 					}
 				}
 				return
 			}
 
 			// Check unique in the database
-			for colIndex, rule := range helper.RulesUser {
+			for colIndex, rule := range helper.RulesExcelUser {
 				fields := strings.Split(rule, ",")
 				fieldName := fields[0]
 				rules := fields[1:]
@@ -255,7 +261,7 @@ func (service *UserServiceImpl) Import(ctx context.Context, file *multipart.File
 						cell := row.Cells[colIndex]
 						data := service.userRepo.CheckColumnExists(ctx, fieldName, cell.String())
 						if data != false {
-							validationExcel.Add(fieldName, rowIndex+1, fmt.Sprintf("%s '%s' already taken", fieldName, cell.String()))
+							excelValidation.AddHandler(fieldName, rowIndex+1, fmt.Sprintf("%s '%s' already taken", fieldName, cell.String()))
 							return
 						}
 					}
@@ -291,11 +297,11 @@ func (service *UserServiceImpl) Import(ctx context.Context, file *multipart.File
 	}()
 
 	for err := range errorChan {
-		return exception.NewInternalServerError(err.Error())
+		panic(exception.NewInternalServerErrorHandler(err.Error()))
 	}
 
-	if len(validationExcel.Errors) > 0 {
-		return &validationExcel
+	if len(excelValidation.Errors) > 0 {
+		return &excelValidation
 	}
 
 	return nil

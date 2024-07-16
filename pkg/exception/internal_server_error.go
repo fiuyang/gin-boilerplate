@@ -4,7 +4,7 @@ type InternalServerErrorStruct struct {
 	ErrorMsg string
 }
 
-func NewInternalServerError(msg string) *InternalServerErrorStruct {
+func NewInternalServerErrorHandler(msg string) *InternalServerErrorStruct {
 	return &InternalServerErrorStruct{
 		ErrorMsg: msg,
 	}

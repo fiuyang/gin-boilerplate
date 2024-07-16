@@ -42,7 +42,7 @@ func SendEmail(user *model.User, data *EmailData, emailTemp string) {
 	config, err := config.LoadConfig(".")
 
 	if err != nil {
-		panic(exception.NewInternalServerError(err.Error()))
+		panic(exception.NewInternalServerErrorHandler(err.Error()))
 	}
 
 	// Sender data.
@@ -57,7 +57,7 @@ func SendEmail(user *model.User, data *EmailData, emailTemp string) {
 
 	template, err := ParseTemplateDir("template")
 	if err != nil {
-		panic(exception.NewInternalServerError(err.Error()))
+		panic(exception.NewInternalServerErrorHandler(err.Error()))
 	}
 
 	template.ExecuteTemplate(&body, emailTemp, &data)
@@ -75,7 +75,7 @@ func SendEmail(user *model.User, data *EmailData, emailTemp string) {
 
 	// Send Email
 	if err := d.DialAndSend(m); err != nil {
-		panic(exception.NewInternalServerError(err.Error()))
+		panic(exception.NewInternalServerErrorHandler(err.Error()))
 	}
 
 }

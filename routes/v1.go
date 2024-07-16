@@ -1,14 +1,15 @@
-package router
+package routes
 
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"net/http"
 	"scylla/controller"
+	"scylla/entity"
 	"scylla/pkg/middleware"
 )
 
-func NewRouter(
+func NewRoutesV1(
 	authController *controller.AuthController,
 	customerController *controller.CustomerController,
 	userController *controller.UserController,
@@ -17,12 +18,13 @@ func NewRouter(
 	app := gin.New()
 	app.Use(middleware.TracingMiddleware())
 
+	//endpoint not found
 	app.NoRoute(func(ctx *gin.Context) {
-		ctx.JSON(http.StatusNotFound, gin.H{
-			"code":     http.StatusNotFound,
-			"status":   "NOT FOUND",
-			"errors":   "Page Not Found",
-			"trace_id": uuid.New().String(),
+		ctx.JSON(http.StatusNotFound, entity.Error{
+			Code:    http.StatusNotFound,
+			Status:  "NOT FOUND",
+			Errors:  "Page Not Found",
+			TraceID: uuid.New().String(),
 		})
 	})
 
@@ -37,6 +39,7 @@ func NewRouter(
 	authRouter.PATCH("/reset-password", authController.ResetPassword)
 	authRouter.POST("/logout", middleware.JwtMiddleware(), authController.Logout)
 
+	//middleware jwt
 	router.Use(middleware.JwtMiddleware())
 	//customer
 	customerRouter := router.Group("/customers")

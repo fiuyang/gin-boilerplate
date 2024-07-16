@@ -25,7 +25,7 @@ func NewCustomerController(customerService service.CustomerService) *CustomerCon
 	}
 }
 
-// CreateTags		godoc
+//	 Note     		godoc
 //
 //	@Summary		Create customer
 //	@Description	Create customer.
@@ -48,7 +48,7 @@ func (handler *CustomerController) Create(ctx *gin.Context) {
 
 	err = handler.customerService.Create(c, request)
 	if err != nil {
-		panic(exception.NewInternalServerError(err.Error()))
+		panic(exception.NewInternalServerErrorHandler(err.Error()))
 	}
 
 	webResponse := entity.Response{
@@ -61,7 +61,7 @@ func (handler *CustomerController) Create(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, webResponse)
 }
 
-// CreateTags		godoc
+//	 Note		    godoc
 //
 //	@Summary		Create customer batch
 //	@Description	Create customer batch.
@@ -94,7 +94,7 @@ func (handler *CustomerController) CreateBatch(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, webResponse)
 }
 
-// CreateTags		godoc
+//	    Note		    godoc
 //
 //	@Summary		update customer
 //	@Description	update customer.
@@ -119,7 +119,7 @@ func (handler *CustomerController) Update(ctx *gin.Context) {
 	var params entity.CustomerParams
 
 	if err := ctx.ShouldBindUri(&params); err != nil {
-		panic(exception.NewBadRequestError(err.Error()))
+		panic(exception.NewBadRequestHandler(err.Error()))
 	}
 
 	request.ID = params.CustomerId
@@ -171,7 +171,7 @@ func (handler *CustomerController) DeleteBatch(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, webResponse)
 }
 
-// CreateTags		godoc
+//	 Note		godoc
 //
 //	@Summary		get customer by id.
 //	@Param			customerId	path	string	true	"customer_id"
@@ -191,7 +191,7 @@ func (handler *CustomerController) FindById(ctx *gin.Context) {
 	var params entity.CustomerParams
 
 	if err := ctx.ShouldBindUri(&params); err != nil {
-		panic(exception.NewBadRequestError(err.Error()))
+		panic(exception.NewBadRequestHandler(err.Error()))
 	}
 
 	data := handler.customerService.FindById(c, params)
@@ -206,7 +206,7 @@ func (handler *CustomerController) FindById(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, webResponse)
 }
 
-// CreateTags		godoc
+//	 Note		godoc
 //
 //	@Summary		Get all customers.
 //	@Description	Get all customers.
@@ -232,7 +232,7 @@ func (handler *CustomerController) FindAllPaging(ctx *gin.Context) {
 	var dataFilter entity.CustomerQueryFilter
 
 	if err := ctx.ShouldBindQuery(&dataFilter); err != nil {
-		panic(exception.NewBadRequestError(err.Error()))
+		panic(exception.NewBadRequestHandler(err.Error()))
 	}
 
 	response, paging := handler.customerService.FindAllPaging(c, dataFilter)
@@ -248,7 +248,7 @@ func (handler *CustomerController) FindAllPaging(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, webResponse)
 }
 
-// ExportTags 		    godoc
+//	 Note 		    godoc
 //
 //	@Summary		Export Excel customer.
 //	@Description	Export Excel customer.
@@ -271,7 +271,7 @@ func (controller *CustomerController) Export(ctx *gin.Context) {
 	var dataFilter entity.CustomerQueryFilter
 
 	if err := ctx.ShouldBindQuery(&dataFilter); err != nil {
-		panic(exception.NewBadRequestError(err.Error()))
+		panic(exception.NewBadRequestHandler(err.Error()))
 	}
 
 	filePath, err := controller.customerService.Export(c, dataFilter)
@@ -291,7 +291,7 @@ func (controller *CustomerController) Export(ctx *gin.Context) {
 	ctx.Data(http.StatusOK, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", data)
 }
 
-// ImportTags 		    godoc
+//	 Note 		    godoc
 //
 //	@Summary		Import Excel customer.
 //	@Description	Import Excel customer.
@@ -311,10 +311,9 @@ func (controller *CustomerController) Import(ctx *gin.Context) {
 
 	file, err := ctx.FormFile("file")
 	if err != nil {
-		panic(exception.NewBadRequestError(err.Error()))
+		panic(exception.NewBadRequestHandler(err.Error()))
 	}
 
-	fmt.Println("cek", file)
 	err = controller.customerService.Import(c, file)
 	helper.ErrorPanic(err)
 

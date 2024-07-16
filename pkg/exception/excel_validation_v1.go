@@ -2,11 +2,11 @@ package exception
 
 import "fmt"
 
-type NewValidationExcelError struct {
+type NewExcelValidationError struct {
 	Errors map[string][]string
 }
 
-func (e *NewValidationExcelError) Add(field string, row int, message string) {
+func (e *NewExcelValidationError) AddHandler(field string, row int, message string) {
 	if e.Errors == nil {
 		e.Errors = make(map[string][]string)
 	}
@@ -16,6 +16,6 @@ func (e *NewValidationExcelError) Add(field string, row int, message string) {
 	e.Errors[field] = append(e.Errors[field], fmt.Sprintf("%s row %d", message, row))
 }
 
-func (e *NewValidationExcelError) Error() string {
+func (e *NewExcelValidationError) Error() string {
 	return "validation errors"
 }

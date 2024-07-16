@@ -4,14 +4,13 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
-	"github.com/google/uuid"
 	"net/http"
 	"scylla/entity"
 	"strings"
 	"unicode"
 )
 
-func ErrorHandlers(ctx *gin.Context, err interface{}) {
+func ExceptionHandlers(ctx *gin.Context, err interface{}) {
 	if notFoundError(ctx, err) {
 		return
 	} else if validationError(ctx, err) {
@@ -20,9 +19,9 @@ func ErrorHandlers(ctx *gin.Context, err interface{}) {
 		return
 	} else if unauthorizedError(ctx, err) {
 		return
-	} else if validationExcelError(ctx, err) {
+	} else if excelValidationError(ctx, err) {
 		return
-	} else if validationExcel(ctx, err) {
+	} else if excelValidation(ctx, err) {
 		return
 	} else {
 		internalServerError(ctx, err)
@@ -85,11 +84,12 @@ func validationError(ctx *gin.Context, err interface{}) bool {
 			}
 		}
 
+		traceID, _ := ctx.Get("trace_id")
 		ctx.JSON(http.StatusBadRequest, entity.Error{
 			Code:    http.StatusBadRequest,
 			Status:  "BAD REQUEST",
 			Errors:  report,
-			TraceID: uuid.New().String(),
+			TraceID: traceID.(string),
 		})
 
 		return true
@@ -100,12 +100,14 @@ func validationError(ctx *gin.Context, err interface{}) bool {
 func badRequestError(ctx *gin.Context, err interface{}) bool {
 	exception, ok := err.(*BadRequestErrorStruct)
 	if ok {
+		traceID, _ := ctx.Get("trace_id")
 		ctx.JSON(http.StatusBadRequest, entity.Error{
 			Code:    http.StatusBadRequest,
 			Status:  "BAD REQUEST",
 			Errors:  exception.Error(),
-			TraceID: uuid.New().String(),
+			TraceID: traceID.(string),
 		})
+
 		return true
 	}
 	return false
@@ -114,11 +116,12 @@ func badRequestError(ctx *gin.Context, err interface{}) bool {
 func unauthorizedError(ctx *gin.Context, err interface{}) bool {
 	exception, ok := err.(*UnauthorizedErrorStruct)
 	if ok {
+		traceID, _ := ctx.Get("trace_id")
 		ctx.AbortWithStatusJSON(http.StatusUnauthorized, entity.Error{
 			Code:    http.StatusUnauthorized,
 			Status:  "UNAUTHORIZED",
 			Errors:  exception.Error(),
-			TraceID: uuid.New().String(),
+			TraceID: traceID.(string),
 		})
 		return true
 	}
@@ -128,11 +131,12 @@ func unauthorizedError(ctx *gin.Context, err interface{}) bool {
 func notFoundError(ctx *gin.Context, err interface{}) bool {
 	exception, ok := err.(*NotFoundErrorStruct)
 	if ok {
+		traceID, _ := ctx.Get("trace_id")
 		ctx.JSON(http.StatusNotFound, entity.Error{
 			Code:    http.StatusNotFound,
 			Status:  "NOT FOUND",
 			Errors:  exception.Error,
-			TraceID: uuid.New().String(),
+			TraceID: traceID.(string),
 		})
 		return true
 	}
@@ -142,39 +146,42 @@ func notFoundError(ctx *gin.Context, err interface{}) bool {
 func internalServerError(ctx *gin.Context, err interface{}) bool {
 	exception, ok := err.(*InternalServerErrorStruct)
 	if ok {
+		traceID, _ := ctx.Get("trace_id")
 		ctx.JSON(http.StatusInternalServerError, entity.Error{
 			Code:    http.StatusInternalServerError,
 			Status:  "INTERNAL SERVER ERROR",
 			Errors:  exception.Error(),
-			TraceID: uuid.New().String(),
+			TraceID: traceID.(string),
 		})
 		return true
 	}
 	return false
 }
 
-func validationExcelError(ctx *gin.Context, err interface{}) bool {
-	exception, ok := err.(*NewValidationExcelError)
+func excelValidationError(ctx *gin.Context, err interface{}) bool {
+	exception, ok := err.(*NewExcelValidationError)
 	if ok {
+		traceID, _ := ctx.Get("trace_id")
 		ctx.JSON(http.StatusBadRequest, entity.Error{
 			Code:    http.StatusBadRequest,
 			Status:  "BAD REQUEST",
 			Errors:  exception.Errors,
-			TraceID: uuid.New().String(),
+			TraceID: traceID.(string),
 		})
 		return true
 	}
 	return false
 }
 
-func validationExcel(ctx *gin.Context, err interface{}) bool {
-	exception, ok := err.(*ValidationExcel)
+func excelValidation(ctx *gin.Context, err interface{}) bool {
+	exception, ok := err.(*ExcelValidation)
 	if ok {
+		traceID, _ := ctx.Get("trace_id")
 		ctx.JSON(http.StatusBadRequest, entity.Error{
 			Code:    http.StatusBadRequest,
 			Status:  "BAD REQUEST",
 			Errors:  exception.Errors,
-			TraceID: uuid.New().String(),
+			TraceID: traceID.(string),
 		})
 		return true
 	}

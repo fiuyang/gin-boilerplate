@@ -4,7 +4,7 @@ type UnauthorizedErrorStruct struct {
 	ErrorMsg string
 }
 
-func NewUnauthorizedError(msg string) *UnauthorizedErrorStruct {
+func NewUnauthorizedHandler(msg string) *UnauthorizedErrorStruct {
 	return &UnauthorizedErrorStruct{
 		ErrorMsg: msg,
 	}
