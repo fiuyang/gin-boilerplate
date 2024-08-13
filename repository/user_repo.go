@@ -5,19 +5,19 @@ import (
 	"errors"
 	"fmt"
 	"gorm.io/gorm"
+	"scylla/dto"
 	"scylla/entity"
-	"scylla/model"
 	"scylla/pkg/helper"
 )
 
 type UserRepo interface {
-	Insert(ctx context.Context, data model.User) error
-	InsertBatch(ctx context.Context, data []model.User, batchSize int) error
-	Update(ctx context.Context, data model.User) error
+	Insert(ctx context.Context, data entity.User) error
+	InsertBatch(ctx context.Context, data []entity.User, batchSize int) error
+	Update(ctx context.Context, data entity.User) error
 	DeleteBatch(ctx context.Context, Ids []int) error
-	FindAll(ctx context.Context, dataFilter entity.UserQueryFilter) (domain []model.User, err error)
-	FindById(ctx context.Context, Id int) (data model.User, err error)
-	FindByColumns(ctx context.Context, columns []string, queries []any) (model.User, error)
+	FindAll(ctx context.Context, dataFilter dto.UserQueryFilter) (domain []entity.User, err error)
+	FindById(ctx context.Context, Id int) (data entity.User, err error)
+	FindByColumns(ctx context.Context, columns []string, queries []any) (entity.User, error)
 	CheckColumnExists(ctx context.Context, column string, value interface{}) bool
 }
 
@@ -29,7 +29,7 @@ func NewUserRepoImpl(db *gorm.DB) UserRepo {
 	return &UserRepoImpl{db: db}
 }
 
-func (repo *UserRepoImpl) Insert(ctx context.Context, data model.User) error {
+func (repo *UserRepoImpl) Insert(ctx context.Context, data entity.User) error {
 	result := repo.db.WithContext(ctx).Create(&data)
 	if result.Error != nil {
 		return result.Error
@@ -37,7 +37,7 @@ func (repo *UserRepoImpl) Insert(ctx context.Context, data model.User) error {
 	return nil
 }
 
-func (repo *UserRepoImpl) InsertBatch(ctx context.Context, data []model.User, batchSize int) error {
+func (repo *UserRepoImpl) InsertBatch(ctx context.Context, data []entity.User, batchSize int) error {
 	tx := repo.db.WithContext(ctx).Begin()
 	if tx.Error != nil {
 		return tx.Error
@@ -55,7 +55,7 @@ func (repo *UserRepoImpl) InsertBatch(ctx context.Context, data []model.User, ba
 	return nil
 }
 
-func (repo *UserRepoImpl) Update(ctx context.Context, data model.User) error {
+func (repo *UserRepoImpl) Update(ctx context.Context, data entity.User) error {
 	result := repo.db.WithContext(ctx).Updates(&data)
 
 	if result.RowsAffected == 0 {
@@ -69,7 +69,7 @@ func (repo *UserRepoImpl) Update(ctx context.Context, data model.User) error {
 }
 
 func (repo *UserRepoImpl) DeleteBatch(ctx context.Context, Ids []int) error {
-	var data model.User
+	var data entity.User
 	result := repo.db.WithContext(ctx).Where("id IN (?)", Ids).Delete(&data)
 
 	if result.RowsAffected == 0 {
@@ -83,7 +83,7 @@ func (repo *UserRepoImpl) DeleteBatch(ctx context.Context, Ids []int) error {
 	return nil
 }
 
-func (repo *UserRepoImpl) FindAll(ctx context.Context, dataFilter entity.UserQueryFilter) (domain []model.User, err error) {
+func (repo *UserRepoImpl) FindAll(ctx context.Context, dataFilter dto.UserQueryFilter) (domain []entity.User, err error) {
 	query := "SELECT * FROM users"
 	args := []interface{}{}
 
@@ -109,7 +109,7 @@ func (repo *UserRepoImpl) FindAll(ctx context.Context, dataFilter entity.UserQue
 	defer rows.Close()
 
 	for rows.Next() {
-		var user model.User
+		var user entity.User
 		err := rows.Scan(&user.ID, &user.Username, &user.Email, &user.Password, &user.CreatedAt, &user.UpdatedAt)
 		if err != nil {
 			return nil, err
@@ -120,7 +120,7 @@ func (repo *UserRepoImpl) FindAll(ctx context.Context, dataFilter entity.UserQue
 	return domain, nil
 }
 
-func (repo *UserRepoImpl) FindById(ctx context.Context, Id int) (data model.User, err error) {
+func (repo *UserRepoImpl) FindById(ctx context.Context, Id int) (data entity.User, err error) {
 	result := repo.db.WithContext(ctx).First(&data, Id)
 
 	if result.RowsAffected == 0 {
@@ -134,12 +134,12 @@ func (repo *UserRepoImpl) FindById(ctx context.Context, Id int) (data model.User
 	return data, nil
 }
 
-func (repo *UserRepoImpl) FindByColumns(ctx context.Context, columns []string, queries []any) (model.User, error) {
+func (repo *UserRepoImpl) FindByColumns(ctx context.Context, columns []string, queries []any) (entity.User, error) {
 	if len(columns) != len(queries) {
-		return model.User{}, errors.New("columns and queries length mismatch")
+		return entity.User{}, errors.New("columns and queries length mismatch")
 	}
 
-	var data model.User
+	var data entity.User
 	db := repo.db.WithContext(ctx).Table("users")
 	for i, column := range columns {
 		db = db.Where(column+" = ?", queries[i])

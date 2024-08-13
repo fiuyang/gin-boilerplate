@@ -4,18 +4,18 @@ import (
 	"context"
 	"errors"
 	"gorm.io/gorm"
-	"scylla/model"
+	"scylla/entity"
 	"scylla/pkg/helper"
 )
 
 type PassResetRepo interface {
-	Insert(ctx context.Context, data model.PasswordReset) error
-	InsertBatch(ctx context.Context, data []model.PasswordReset, batchSize int) error
-	Update(ctx context.Context, data model.PasswordReset) error
+	Insert(ctx context.Context, data entity.PasswordReset) error
+	InsertBatch(ctx context.Context, data []entity.PasswordReset, batchSize int) error
+	Update(ctx context.Context, data entity.PasswordReset) error
 	DeleteByColumns(ctx context.Context, columns []string, queries []any) error
 	DeleteBatch(ctx context.Context, Ids []int) error
-	FindById(ctx context.Context, Id int) (data model.PasswordReset, err error)
-	FindByColumns(ctx context.Context, columns []string, queries []any) (model.PasswordReset, error)
+	FindById(ctx context.Context, Id int) (data entity.PasswordReset, err error)
+	FindByColumns(ctx context.Context, columns []string, queries []any) (entity.PasswordReset, error)
 }
 
 type PassResetRepoImpl struct {
@@ -26,7 +26,7 @@ func NewPassResetRepoImpl(db *gorm.DB) PassResetRepo {
 	return &PassResetRepoImpl{db: db}
 }
 
-func (repo *PassResetRepoImpl) Insert(ctx context.Context, data model.PasswordReset) error {
+func (repo *PassResetRepoImpl) Insert(ctx context.Context, data entity.PasswordReset) error {
 	result := repo.db.WithContext(ctx).Create(&data)
 	if result.Error != nil {
 		return result.Error
@@ -34,7 +34,7 @@ func (repo *PassResetRepoImpl) Insert(ctx context.Context, data model.PasswordRe
 	return nil
 }
 
-func (repo *PassResetRepoImpl) InsertBatch(ctx context.Context, data []model.PasswordReset, batchSize int) error {
+func (repo *PassResetRepoImpl) InsertBatch(ctx context.Context, data []entity.PasswordReset, batchSize int) error {
 	tx := repo.db.WithContext(ctx).Begin()
 	if tx.Error != nil {
 		return tx.Error
@@ -52,7 +52,7 @@ func (repo *PassResetRepoImpl) InsertBatch(ctx context.Context, data []model.Pas
 	return nil
 }
 
-func (repo *PassResetRepoImpl) Update(ctx context.Context, data model.PasswordReset) error {
+func (repo *PassResetRepoImpl) Update(ctx context.Context, data entity.PasswordReset) error {
 	result := repo.db.WithContext(ctx).Updates(&data)
 	if result.RowsAffected == 0 {
 		return errors.New("record not found")
@@ -69,7 +69,7 @@ func (repo *PassResetRepoImpl) DeleteByColumns(ctx context.Context, columns []st
 		return errors.New("columns and queries length mismatch")
 	}
 
-	var data model.PasswordReset
+	var data entity.PasswordReset
 	db := repo.db.WithContext(ctx).Table("password_resets")
 	for i, column := range columns {
 		db = db.Where(column+" = ?", queries[i])
@@ -88,7 +88,7 @@ func (repo *PassResetRepoImpl) DeleteByColumns(ctx context.Context, columns []st
 }
 
 func (repo *PassResetRepoImpl) DeleteBatch(ctx context.Context, Ids []int) error {
-	var data model.Customer
+	var data entity.Customer
 	result := repo.db.WithContext(ctx).Where("id IN (?)", Ids).Delete(&data)
 
 	if result.RowsAffected == 0 {
@@ -102,7 +102,7 @@ func (repo *PassResetRepoImpl) DeleteBatch(ctx context.Context, Ids []int) error
 	return nil
 }
 
-func (repo *PassResetRepoImpl) FindById(ctx context.Context, Id int) (data model.PasswordReset, err error) {
+func (repo *PassResetRepoImpl) FindById(ctx context.Context, Id int) (data entity.PasswordReset, err error) {
 	result := repo.db.WithContext(ctx).First(&data, Id)
 
 	if result.RowsAffected == 0 {
@@ -116,12 +116,12 @@ func (repo *PassResetRepoImpl) FindById(ctx context.Context, Id int) (data model
 	return data, nil
 }
 
-func (repo *PassResetRepoImpl) FindByColumns(ctx context.Context, columns []string, queries []any) (model.PasswordReset, error) {
+func (repo *PassResetRepoImpl) FindByColumns(ctx context.Context, columns []string, queries []any) (entity.PasswordReset, error) {
 	if len(columns) != len(queries) {
-		return model.PasswordReset{}, errors.New("columns and queries length mismatch")
+		return entity.PasswordReset{}, errors.New("columns and queries length mismatch")
 	}
 
-	var data model.PasswordReset
+	var data entity.PasswordReset
 	db := repo.db.WithContext(ctx).Table("password_resets")
 	for i, column := range columns {
 		db = db.Where(column+" = ?", queries[i])

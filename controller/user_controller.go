@@ -7,9 +7,10 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"scylla/entity"
+	"scylla/dto"
 	"scylla/pkg/exception"
 	"scylla/pkg/helper"
+	"scylla/pkg/middleware"
 	"scylla/pkg/utils"
 	"scylla/service"
 	"time"
@@ -25,30 +26,41 @@ func NewUserController(userService service.UserService) *UserController {
 	}
 }
 
+func (controller *UserController) Route(app *gin.Engine) {
+	userRouter := app.Group("/api/v1/users", middleware.JwtMiddleware())
+	userRouter.POST("", controller.Create)
+	userRouter.PATCH("/:userId", controller.Update)
+	userRouter.GET("/:userId", controller.FindById)
+	userRouter.GET("", controller.FindAll)
+	userRouter.POST("/batch", controller.DeleteBatch)
+	userRouter.GET("/export", controller.Export)
+	userRouter.POST("/import", controller.Import)
+}
+
 // Note		godoc
 //
 //	@Summary		Create user
 //	@Description	Create user.
-//	@Param			data	body	entity.CreateUserRequest	true	"create user"
+//	@Param			data	body	dto.CreateUserRequest	true	"create user"
 //	@Produce		application/json
 //	@Tags			users
-//	@Success		201	{object}	entity.JsonCreated{data=nil}"Data"
-//	@Failure		400	{object}	entity.JsonBadRequest{}				"Validation error"
-//	@Failure		404	{object}	entity.JsonNotFound{}				"Data not found"
-//	@Failure		500	{object}	entity.JsonInternalServerError{}	"Internal server error"
+//	@Success		201	{object}	dto.JsonCreated{data=nil}       "Data"
+//	@Failure		400	{object}	dto.JsonBadRequest{}			"Validation error"
+//	@Failure		404	{object}	dto.JsonNotFound{}				"Data not found"
+//	@Failure		500	{object}	dto.JsonInternalServerError{}	"Internal server error"
 //	@Router			/users [post]
 //	@Security		Bearer
 func (controller *UserController) Create(ctx *gin.Context) {
 	c, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	request := entity.CreateUserRequest{}
+	request := dto.CreateUserRequest{}
 	err := ctx.ShouldBindJSON(&request)
 	helper.ErrorPanic(err)
 
 	controller.userService.Create(c, request)
 
-	webResponse := entity.Response{
+	webResponse := dto.Response{
 		Code:    200,
 		Status:  "Ok",
 		Message: "Create Successful",
@@ -63,25 +75,25 @@ func (controller *UserController) Create(ctx *gin.Context) {
 //
 //	@Summary		Update user
 //	@Description	Update user.
-//	@Param			userId	path	string						true	"user_id"
-//	@Param			data	body	entity.UpdateUserRequest	true	"update user"
+//	@Param			userId	path	string					true	"user_id"
+//	@Param			data	body	dto.UpdateUserRequest	true	"update user"
 //	@Tags			users
 //	@Produce		application/json
-//	@Success		200	{object}	entity.JsonSuccess{data=nil}"Data"
-//	@Failure		400	{object}	entity.JsonBadRequest{}				"Validation error"
-//	@Failure		404	{object}	entity.JsonNotFound{}				"Data not found"
-//	@Failure		500	{object}	entity.JsonInternalServerError{}	"Internal server error"
+//	@Success		200	{object}	dto.JsonSuccess{data=nil}     "Data"
+//	@Failure		400	{object}	dto.JsonBadRequest{}			"Validation error"
+//	@Failure		404	{object}	dto.JsonNotFound{}				"Data not found"
+//	@Failure		500	{object}	dto.JsonInternalServerError{}	"Internal server error"
 //	@Router			/users/{userId} [patch]
 //	@Security		Bearer
 func (controller *UserController) Update(ctx *gin.Context) {
 	c, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	request := entity.UpdateUserRequest{}
+	request := dto.UpdateUserRequest{}
 	err := ctx.ShouldBindJSON(&request)
 	helper.ErrorPanic(err)
 
-	var params entity.UserParams
+	var params dto.UserParams
 
 	if err := ctx.ShouldBindUri(&params); err != nil {
 		panic(exception.NewBadRequestHandler(err.Error()))
@@ -91,7 +103,7 @@ func (controller *UserController) Update(ctx *gin.Context) {
 
 	controller.userService.Update(c, request)
 
-	webResponse := entity.Response{
+	webResponse := dto.Response{
 		Code:    http.StatusOK,
 		Status:  "Ok",
 		Message: "Update Successful",
@@ -106,26 +118,26 @@ func (controller *UserController) Update(ctx *gin.Context) {
 //
 //	@Summary		Delete batch user
 //	@Description	Delete batch user.
-//	@Param			data	body	entity.DeleteBatchUserRequest	true	"delete batch user"
+//	@Param			data	body	dto.DeleteBatchUserRequest	true	"delete batch user"
 //	@Produce		application/json
 //	@Tags			users
-//	@Success		200	{object}	entity.JsonSuccess{data=nil}"Data"
-//	@Failure		400	{object}	entity.JsonBadRequest{}				"Validation error"
-//	@Failure		404	{object}	entity.JsonNotFound{}				"Data not found"
-//	@Failure		500	{object}	entity.JsonInternalServerError{}	"Internal server error"
+//	@Success		200	{object}	dto.JsonSuccess{data=nil}       "Data"
+//	@Failure		400	{object}	dto.JsonBadRequest{}			"Validation error"
+//	@Failure		404	{object}	dto.JsonNotFound{}				"Data not found"
+//	@Failure		500	{object}	dto.JsonInternalServerError{}	"Internal server error"
 //	@Router			/users/batch [post]
 //	@Security		Bearer
 func (controller *UserController) DeleteBatch(ctx *gin.Context) {
 	c, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	request := entity.DeleteBatchUserRequest{}
+	request := dto.DeleteBatchUserRequest{}
 	err := ctx.ShouldBindJSON(&request)
 	helper.ErrorPanic(err)
 
 	controller.userService.DeleteBatch(c, request)
 
-	webResponse := entity.Response{
+	webResponse := dto.Response{
 		Code:    http.StatusOK,
 		Status:  "Ok",
 		Message: "Delete Batch Successful",
@@ -143,17 +155,17 @@ func (controller *UserController) DeleteBatch(ctx *gin.Context) {
 //	@Param			userId	path	string	true	"user_id"
 //	@Produce		application/json
 //	@Tags			users
-//	@Success		200	{object}	entity.JsonSuccess{data=nil}"Data"
-//	@Failure		400	{object}	entity.JsonBadRequest{}				"Validation error"
-//	@Failure		404	{object}	entity.JsonNotFound{}				"Data not found"
-//	@Failure		500	{object}	entity.JsonInternalServerError{}	"Internal server error"
+//	@Success		200	{object}	dto.JsonSuccess{data=nil}       "Data"
+//	@Failure		400	{object}	dto.JsonBadRequest{}			"Validation error"
+//	@Failure		404	{object}	dto.JsonNotFound{}				"Data not found"
+//	@Failure		500	{object}	dto.JsonInternalServerError{}	"Internal server error"
 //	@Router			/users/{userId} [get]
 //	@Security		Bearer
 func (controller *UserController) FindById(ctx *gin.Context) {
 	c, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	var params entity.UserParams
+	var params dto.UserParams
 
 	if err := ctx.ShouldBindUri(&params); err != nil {
 		panic(exception.NewBadRequestHandler(err.Error()))
@@ -161,7 +173,7 @@ func (controller *UserController) FindById(ctx *gin.Context) {
 
 	response := controller.userService.FindById(c, params)
 
-	webResponse := entity.Response{
+	webResponse := dto.Response{
 		Code:   http.StatusOK,
 		Status: "Ok",
 		Data:   response,
@@ -177,21 +189,21 @@ func (controller *UserController) FindById(ctx *gin.Context) {
 //	@Description	Get all users.
 //	@Produce		application/json
 //	@Tags			users
-//	@Param			start_date	query		string											false	"start_date"
-//	@Param			end_date	query		string											false	"end_date"
-//	@Param			username	query		string											false	"username"
-//	@Param			email		query		string											false	"email"
-//	@Success		200			{object}	entity.Response{data=[]entity.UserResponse{}}	"Data"
-//	@Failure		400			{object}	entity.JsonBadRequest{}							"Validation error"
-//	@Failure		404			{object}	entity.JsonNotFound{}							"Data not found"
-//	@Failure		500			{object}	entity.JsonInternalServerError{}				"Internal server error"
+//	@Param			start_date	query		string		false	"start_date"
+//	@Param			end_date	query		string		false	"end_date"
+//	@Param			username	query		string	    false	"username"
+//	@Param			email		query		string	    false	"email"
+//	@Success		200			{object}	dto.Response{data=[]dto.UserResponse{}}   	"Data"
+//	@Failure		400			{object}	dto.JsonBadRequest{}						"Validation error"
+//	@Failure		404			{object}	dto.JsonNotFound{}							"Data not found"
+//	@Failure		500			{object}	dto.JsonInternalServerError{}				"Internal server error"
 //	@Router			/users [get]
 //	@Security		Bearer
 func (controller *UserController) FindAll(ctx *gin.Context) {
 	c, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	var dataFilter entity.UserQueryFilter
+	var dataFilter dto.UserQueryFilter
 
 	if err := ctx.ShouldBindQuery(&dataFilter); err != nil {
 		panic(exception.NewBadRequestHandler(err.Error()))
@@ -199,7 +211,7 @@ func (controller *UserController) FindAll(ctx *gin.Context) {
 
 	response := controller.userService.FindAll(c, dataFilter)
 
-	webResponse := entity.Response{
+	webResponse := dto.Response{
 		Code:   http.StatusOK,
 		Status: "OK",
 		Data:   response,
@@ -220,17 +232,17 @@ func (controller *UserController) FindAll(ctx *gin.Context) {
 //	@Param			end_date	query		string	false	"end_date"
 //	@Param			username	query		string	false	"username"
 //	@Param			email		query		string	false	"email"
-//	@Success		200			{object}	entity.JsonSuccess{data=string}"Data"
-//	@Failure		400			{object}	entity.JsonBadRequest{}				"Validation error"
-//	@Failure		404			{object}	entity.JsonNotFound{}				"Data not found"
-//	@Failure		500			{object}	entity.JsonInternalServerError{}	"Internal server error"
+//	@Success		200			{object}	dto.JsonSuccess{data=string}    "Data"
+//	@Failure		400			{object}	dto.JsonBadRequest{}			"Validation error"
+//	@Failure		404			{object}	dto.JsonNotFound{}				"Data not found"
+//	@Failure		500			{object}	dto.JsonInternalServerError{}	"Internal server error"
 //	@Router			/users/export [get]
 //	@Security		Bearer
 func (controller *UserController) Export(ctx *gin.Context) {
 	c, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	var dataFilter entity.UserQueryFilter
+	var dataFilter dto.UserQueryFilter
 
 	if err := ctx.ShouldBindQuery(&dataFilter); err != nil {
 		panic(exception.NewBadRequestHandler(err.Error()))
@@ -253,19 +265,19 @@ func (controller *UserController) Export(ctx *gin.Context) {
 	ctx.Data(http.StatusOK, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", data)
 }
 
-//	 Note 		    godoc
+//	Note 		    godoc
 //
-//	@Summary		Import Excel user.
-//	@Description	Import Excel user.
-//	@Produce		application/json
-//	@Tags			users
-//	@Param			data	formData	file	true	"import Excel user"
-//	@Success		200		{object}	entity.JsonSuccess{data=string}"Data"
-//	@Failure		400		{object}	entity.JsonBadRequest{}				"Validation error"
-//	@Failure		404		{object}	entity.JsonNotFound{}				"Data not found"
-//	@Failure		500		{object}	entity.JsonInternalServerError{}	"Internal server error"
-//	@Router			/users/import [post]
-//	@Security		Bearer
+// @Summary		Import Excel user.
+// @Description	Import Excel user.
+// @Produce		application/json
+// @Tags		users
+// @Param		data	formData	file	true	"import Excel user"
+// @Success		200		{object}	dto.JsonSuccess{data=string}   "Data"
+// @Failure		400		{object}	dto.JsonBadRequest{}			"Validation error"
+// @Failure		404		{object}	dto.JsonNotFound{}				"Data not found"
+// @Failure		500		{object}	dto.JsonInternalServerError{}	"Internal server error"
+// @Router		/users/import [post]
+// @Security	Bearer
 func (controller *UserController) Import(ctx *gin.Context) {
 	c, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
@@ -279,7 +291,7 @@ func (controller *UserController) Import(ctx *gin.Context) {
 	err = controller.userService.Import(c, file)
 	helper.ErrorPanic(err)
 
-	webResponse := entity.Response{
+	webResponse := dto.Response{
 		Code:    http.StatusOK,
 		Status:  "Ok",
 		Message: "Import Successful",

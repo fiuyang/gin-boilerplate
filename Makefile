@@ -2,10 +2,10 @@
 include .env
 
 dev:
-	@go run main.go
+	@go run cmd/api/main.go
 
 doc:
-	@swag init
+	@swag init -g cmd/api/main.go
 
 dev-reload:
 	@air

@@ -5,7 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"net/http"
-	"scylla/entity"
+	"scylla/dto"
 	"strings"
 	"unicode"
 )
@@ -54,7 +54,7 @@ func validationError(ctx *gin.Context, err interface{}) bool {
 			case "lte":
 				report[fieldName] = fmt.Sprintf("%s value must be lower than %s", fieldName, e.Param())
 			case "unique":
-				report[fieldName] = fmt.Sprintf("%s has already been taken %s", fieldName)
+				report[fieldName] = fmt.Sprintf("%s has already been taken", fieldName)
 			case "max":
 				report[fieldName] = fmt.Sprintf("%s value must be lower than %s", fieldName, e.Param())
 			case "min":
@@ -68,24 +68,28 @@ func validationError(ctx *gin.Context, err interface{}) bool {
 			case "len":
 				report[fieldName] = fmt.Sprintf("%s value must be exactly %s characters long", fieldName, e.Param())
 			case "alphanum":
-				report[fieldName] = fmt.Sprintf("%s value must be char and numeric", fieldName, e.Param())
-			case "notEmptyStringSlice":
+				report[fieldName] = fmt.Sprintf("%s value must be char and numeric %s", fieldName, e.Param())
+			case "sliceString":
 				report[fieldName] = fmt.Sprintf("%s value ​​in the array cannot be empty is string", fieldName)
 			case "dive":
 				report[fieldName] = fmt.Sprintf("%s value ​​in the array cannot be empty", fieldName)
-			case "date":
+			case "datetime":
 				report[fieldName] = fmt.Sprintf("%s value must be date (yyyy-mm-dd)", fieldName)
-			case "notEmptyIntSlice":
+			case "required_if":
+				report[fieldName] = fmt.Sprintf("%s must be filled in if %s", fieldName, e.Param())
+			case "sliceInt":
 				report[fieldName] = fmt.Sprintf("%s value ​​in the array cannot be empty is int", fieldName)
-			case "isInt":
-				report[fieldName] = fmt.Sprintf("%s value must be of type int", fieldName)
-			case "isString":
-				report[fieldName] = fmt.Sprintf("%s value must be of type string", fieldName)
+			case "equal":
+				report[fieldName] = fmt.Sprintf("%s and %s do not match do not match", fieldName, e.Param())
+			case "image":
+				report[fieldName] = fmt.Sprintf("%s file must be of type jpg, jpeg, png", fieldName)
+			case "base64Image":
+				report[fieldName] = fmt.Sprintf("%s value must be base64 encoded image", fieldName)
 			}
 		}
 
 		traceID, _ := ctx.Get("trace_id")
-		ctx.JSON(http.StatusBadRequest, entity.Error{
+		ctx.JSON(http.StatusBadRequest, dto.Error{
 			Code:    http.StatusBadRequest,
 			Status:  "BAD REQUEST",
 			Errors:  report,
@@ -101,7 +105,7 @@ func badRequestError(ctx *gin.Context, err interface{}) bool {
 	exception, ok := err.(*BadRequestErrorStruct)
 	if ok {
 		traceID, _ := ctx.Get("trace_id")
-		ctx.JSON(http.StatusBadRequest, entity.Error{
+		ctx.JSON(http.StatusBadRequest, dto.Error{
 			Code:    http.StatusBadRequest,
 			Status:  "BAD REQUEST",
 			Errors:  exception.Error(),
@@ -117,7 +121,7 @@ func unauthorizedError(ctx *gin.Context, err interface{}) bool {
 	exception, ok := err.(*UnauthorizedErrorStruct)
 	if ok {
 		traceID, _ := ctx.Get("trace_id")
-		ctx.AbortWithStatusJSON(http.StatusUnauthorized, entity.Error{
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, dto.Error{
 			Code:    http.StatusUnauthorized,
 			Status:  "UNAUTHORIZED",
 			Errors:  exception.Error(),
@@ -132,7 +136,7 @@ func notFoundError(ctx *gin.Context, err interface{}) bool {
 	exception, ok := err.(*NotFoundErrorStruct)
 	if ok {
 		traceID, _ := ctx.Get("trace_id")
-		ctx.JSON(http.StatusNotFound, entity.Error{
+		ctx.JSON(http.StatusNotFound, dto.Error{
 			Code:    http.StatusNotFound,
 			Status:  "NOT FOUND",
 			Errors:  exception.Error,
@@ -147,7 +151,7 @@ func internalServerError(ctx *gin.Context, err interface{}) bool {
 	exception, ok := err.(*InternalServerErrorStruct)
 	if ok {
 		traceID, _ := ctx.Get("trace_id")
-		ctx.JSON(http.StatusInternalServerError, entity.Error{
+		ctx.JSON(http.StatusInternalServerError, dto.Error{
 			Code:    http.StatusInternalServerError,
 			Status:  "INTERNAL SERVER ERROR",
 			Errors:  exception.Error(),
@@ -162,7 +166,7 @@ func excelValidationError(ctx *gin.Context, err interface{}) bool {
 	exception, ok := err.(*NewExcelValidationError)
 	if ok {
 		traceID, _ := ctx.Get("trace_id")
-		ctx.JSON(http.StatusBadRequest, entity.Error{
+		ctx.JSON(http.StatusBadRequest, dto.Error{
 			Code:    http.StatusBadRequest,
 			Status:  "BAD REQUEST",
 			Errors:  exception.Errors,
@@ -177,7 +181,7 @@ func excelValidation(ctx *gin.Context, err interface{}) bool {
 	exception, ok := err.(*ExcelValidation)
 	if ok {
 		traceID, _ := ctx.Get("trace_id")
-		ctx.JSON(http.StatusBadRequest, entity.Error{
+		ctx.JSON(http.StatusBadRequest, dto.Error{
 			Code:    http.StatusBadRequest,
 			Status:  "BAD REQUEST",
 			Errors:  exception.Errors,

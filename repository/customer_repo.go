@@ -5,21 +5,21 @@ import (
 	"errors"
 	"fmt"
 	"gorm.io/gorm"
+	"scylla/dto"
 	"scylla/entity"
-	"scylla/model"
 	"scylla/pkg/helper"
 	"strings"
 )
 
 type CustomerRepo interface {
-	Insert(ctx context.Context, data model.Customer) error
-	InsertBatch(ctx context.Context, data []model.Customer, batchSize int) error
-	Update(ctx context.Context, data model.Customer) error
+	Insert(ctx context.Context, data entity.Customer) error
+	InsertBatch(ctx context.Context, data []entity.Customer, batchSize int) error
+	Update(ctx context.Context, data entity.Customer) error
 	DeleteBatch(ctx context.Context, Ids []int) error
-	FindById(ctx context.Context, Id int) (data model.Customer, err error)
-	FindByColumns(ctx context.Context, columns []string, queries []any) (model.Customer, error)
-	FindAll(ctx context.Context, dataFilter entity.CustomerQueryFilter) (domain []entity.CustomerResponse, err error)
-	FindAllPaging(ctx context.Context, dataFilter entity.CustomerQueryFilter) (domain []entity.CustomerResponse)
+	FindById(ctx context.Context, Id int) (data entity.Customer, err error)
+	FindByColumns(ctx context.Context, columns []string, queries []any) (entity.Customer, error)
+	FindAll(ctx context.Context, dataFilter dto.CustomerQueryFilter) (domain []dto.CustomerResponse, err error)
+	FindAllPaging(ctx context.Context, dataFilter dto.CustomerQueryFilter) (domain []dto.CustomerResponse)
 	CheckColumnExists(ctx context.Context, column string, value interface{}) bool
 }
 
@@ -31,7 +31,7 @@ func NewCustomerRepoImpl(db *gorm.DB) CustomerRepo {
 	return &CustomerRepoImpl{db: db}
 }
 
-func (repo *CustomerRepoImpl) Insert(ctx context.Context, data model.Customer) error {
+func (repo *CustomerRepoImpl) Insert(ctx context.Context, data entity.Customer) error {
 	result := repo.db.WithContext(ctx).Create(&data)
 	if result.Error != nil {
 		return result.Error
@@ -39,7 +39,7 @@ func (repo *CustomerRepoImpl) Insert(ctx context.Context, data model.Customer) e
 	return nil
 }
 
-func (repo *CustomerRepoImpl) InsertBatch(ctx context.Context, data []model.Customer, batchSize int) error {
+func (repo *CustomerRepoImpl) InsertBatch(ctx context.Context, data []entity.Customer, batchSize int) error {
 	tx := repo.db.WithContext(ctx).Begin()
 	if tx.Error != nil {
 		return tx.Error
@@ -57,7 +57,7 @@ func (repo *CustomerRepoImpl) InsertBatch(ctx context.Context, data []model.Cust
 	return nil
 }
 
-func (repo *CustomerRepoImpl) Update(ctx context.Context, data model.Customer) error {
+func (repo *CustomerRepoImpl) Update(ctx context.Context, data entity.Customer) error {
 	result := repo.db.WithContext(ctx).Updates(&data)
 
 	if result.RowsAffected == 0 {
@@ -71,7 +71,7 @@ func (repo *CustomerRepoImpl) Update(ctx context.Context, data model.Customer) e
 }
 
 func (repo *CustomerRepoImpl) DeleteBatch(ctx context.Context, Ids []int) error {
-	var data model.Customer
+	var data entity.Customer
 	result := repo.db.WithContext(ctx).Where("id IN (?)", Ids).Delete(&data)
 
 	if result.RowsAffected == 0 {
@@ -85,7 +85,7 @@ func (repo *CustomerRepoImpl) DeleteBatch(ctx context.Context, Ids []int) error 
 	return nil
 }
 
-func (repo *CustomerRepoImpl) FindById(ctx context.Context, Id int) (data model.Customer, err error) {
+func (repo *CustomerRepoImpl) FindById(ctx context.Context, Id int) (data entity.Customer, err error) {
 	result := repo.db.WithContext(ctx).First(&data, Id)
 	if result.Error != nil {
 		return data, result.Error
@@ -94,12 +94,12 @@ func (repo *CustomerRepoImpl) FindById(ctx context.Context, Id int) (data model.
 	return data, nil
 }
 
-func (repo *CustomerRepoImpl) FindByColumns(ctx context.Context, columns []string, queries []any) (model.Customer, error) {
+func (repo *CustomerRepoImpl) FindByColumns(ctx context.Context, columns []string, queries []any) (entity.Customer, error) {
 	if len(columns) != len(queries) {
-		return model.Customer{}, errors.New("columns and queries length mismatch")
+		return entity.Customer{}, errors.New("columns and queries length mismatch")
 	}
 
-	var data model.Customer
+	var data entity.Customer
 	db := repo.db.WithContext(ctx).Table("customers")
 	for i, column := range columns {
 		db = db.Where(column+" = ?", queries[i])
@@ -117,7 +117,7 @@ func (repo *CustomerRepoImpl) FindByColumns(ctx context.Context, columns []strin
 	return data, nil
 }
 
-func (repo *CustomerRepoImpl) FindAll(ctx context.Context, dataFilter entity.CustomerQueryFilter) (domain []entity.CustomerResponse, err error) {
+func (repo *CustomerRepoImpl) FindAll(ctx context.Context, dataFilter dto.CustomerQueryFilter) (domain []dto.CustomerResponse, err error) {
 	query := "SELECT id, username, email, phone, address, created_at FROM customers"
 	args := []interface{}{}
 
@@ -143,7 +143,7 @@ func (repo *CustomerRepoImpl) FindAll(ctx context.Context, dataFilter entity.Cus
 	defer rows.Close()
 
 	for rows.Next() {
-		var customer entity.CustomerResponse
+		var customer dto.CustomerResponse
 		err := rows.Scan(&customer.ID, &customer.Username, &customer.Email, &customer.Phone, &customer.Address, &customer.CreatedAt)
 		if err != nil {
 			return nil, err
@@ -154,7 +154,7 @@ func (repo *CustomerRepoImpl) FindAll(ctx context.Context, dataFilter entity.Cus
 	return domain, nil
 }
 
-func (repo *CustomerRepoImpl) FindAllPaging(ctx context.Context, dataFilter entity.CustomerQueryFilter) (domain []entity.CustomerResponse) {
+func (repo *CustomerRepoImpl) FindAllPaging(ctx context.Context, dataFilter dto.CustomerQueryFilter) (domain []dto.CustomerResponse) {
 	rawQuery := `
 		SELECT 
 			id, username, email, phone, address, created_at

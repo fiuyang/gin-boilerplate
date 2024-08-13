@@ -1,21 +1,21 @@
 definitions:
-  entity.CheckOtpRequest:
+  dto.CheckOtpRequest:
     properties:
       otp:
         type: integer
     required:
     - otp
     type: object
-  entity.CreateCustomerBatchRequest:
+  dto.CreateCustomerBatchRequest:
     properties:
       customers:
         items:
-          $ref: '#/definitions/entity.CreateCustomerRequest'
+          $ref: '#/definitions/dto.CreateCustomerRequest'
         type: array
     required:
     - customers
     type: object
-  entity.CreateCustomerRequest:
+  dto.CreateCustomerRequest:
     properties:
       address:
         type: string
@@ -31,7 +31,7 @@ definitions:
     - phone
     - username
     type: object
-  entity.CreateUserRequest:
+  dto.CreateUserRequest:
     properties:
       email:
         type: string
@@ -46,7 +46,7 @@ definitions:
     - password
     - username
     type: object
-  entity.CustomerResponse:
+  dto.CustomerResponse:
     properties:
       address:
         type: string
@@ -61,7 +61,7 @@ definitions:
       username:
         type: string
     type: object
-  entity.DeleteBatchCustomerRequest:
+  dto.DeleteBatchCustomerRequest:
     properties:
       id:
         items:
@@ -70,7 +70,7 @@ definitions:
     required:
     - id
     type: object
-  entity.DeleteBatchUserRequest:
+  dto.DeleteBatchUserRequest:
     properties:
       id:
         items:
@@ -79,14 +79,14 @@ definitions:
     required:
     - id
     type: object
-  entity.ForgotPasswordRequest:
+  dto.ForgotPasswordRequest:
     properties:
       email:
         type: string
     required:
     - email
     type: object
-  entity.JsonBadRequest:
+  dto.JsonBadRequest:
     properties:
       code:
         example: 400
@@ -105,7 +105,7 @@ definitions:
         example: dedc5250-5c20-48c9-9383-fac3ccff2679
         type: string
     type: object
-  entity.JsonCreated:
+  dto.JsonCreated:
     properties:
       code:
         example: 201
@@ -121,7 +121,7 @@ definitions:
         example: dedc5250-5c20-48c9-9383-fac3ccff2679
         type: string
     type: object
-  entity.JsonInternalServerError:
+  dto.JsonInternalServerError:
     properties:
       code:
         example: 500
@@ -136,7 +136,7 @@ definitions:
         example: dedc5250-5c20-48c9-9383-fac3ccff2679
         type: string
     type: object
-  entity.JsonNotFound:
+  dto.JsonNotFound:
     properties:
       code:
         example: 404
@@ -151,7 +151,7 @@ definitions:
         example: dedc5250-5c20-48c9-9383-fac3ccff2679
         type: string
     type: object
-  entity.JsonSuccess:
+  dto.JsonSuccess:
     properties:
       code:
         example: 200
@@ -167,7 +167,7 @@ definitions:
         example: dedc5250-5c20-48c9-9383-fac3ccff2679
         type: string
     type: object
-  entity.LoginRequest:
+  dto.LoginRequest:
     properties:
       email:
         type: string
@@ -179,7 +179,7 @@ definitions:
     - email
     - password
     type: object
-  entity.Meta:
+  dto.Meta:
     properties:
       limit:
         type: integer
@@ -190,7 +190,7 @@ definitions:
       total_page:
         type: integer
     type: object
-  entity.ResetPasswordRequest:
+  dto.ResetPasswordRequest:
     properties:
       otp:
         type: integer
@@ -203,7 +203,7 @@ definitions:
     - password
     - password_confirmation
     type: object
-  entity.Response:
+  dto.Response:
     properties:
       code:
         type: integer
@@ -211,13 +211,13 @@ definitions:
       message:
         type: string
       meta:
-        $ref: '#/definitions/entity.Meta'
+        $ref: '#/definitions/dto.Meta'
       status:
         type: string
       trace_id:
         type: string
     type: object
-  entity.UpdateCustomerRequest:
+  dto.UpdateCustomerRequest:
     properties:
       address:
         type: string
@@ -236,7 +236,7 @@ definitions:
     - phone
     - username
     type: object
-  entity.UpdateUserRequest:
+  dto.UpdateUserRequest:
     properties:
       email:
         type: string
@@ -254,7 +254,7 @@ definitions:
     - username
     - username
     type: object
-  entity.UserResponse:
+  dto.UserResponse:
     properties:
       created_at:
         type: string
@@ -280,7 +280,7 @@ paths:
         name: data
         required: true
         schema:
-          $ref: '#/definitions/entity.CheckOtpRequest'
+          $ref: '#/definitions/dto.CheckOtpRequest'
       produces:
       - application/json
       responses:
@@ -288,7 +288,7 @@ paths:
           description: Data
           schema:
             allOf:
-            - $ref: '#/definitions/entity.JsonSuccess'
+            - $ref: '#/definitions/dto.JsonSuccess'
             - properties:
                 data:
                   type: object
@@ -296,15 +296,15 @@ paths:
         "400":
           description: Validation error
           schema:
-            $ref: '#/definitions/entity.JsonBadRequest'
+            $ref: '#/definitions/dto.JsonBadRequest'
         "404":
           description: Data not found
           schema:
-            $ref: '#/definitions/entity.JsonNotFound'
+            $ref: '#/definitions/dto.JsonNotFound'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/entity.JsonInternalServerError'
+            $ref: '#/definitions/dto.JsonInternalServerError'
       summary: Check Otp
       tags:
       - auth
@@ -317,7 +317,7 @@ paths:
         name: data
         required: true
         schema:
-          $ref: '#/definitions/entity.ForgotPasswordRequest'
+          $ref: '#/definitions/dto.ForgotPasswordRequest'
       produces:
       - application/json
       responses:
@@ -325,7 +325,7 @@ paths:
           description: Data
           schema:
             allOf:
-            - $ref: '#/definitions/entity.JsonSuccess'
+            - $ref: '#/definitions/dto.JsonSuccess'
             - properties:
                 data:
                   type: string
@@ -333,15 +333,15 @@ paths:
         "400":
           description: Validation error
           schema:
-            $ref: '#/definitions/entity.JsonBadRequest'
+            $ref: '#/definitions/dto.JsonBadRequest'
         "404":
           description: Data not found
           schema:
-            $ref: '#/definitions/entity.JsonNotFound'
+            $ref: '#/definitions/dto.JsonNotFound'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/entity.JsonInternalServerError'
+            $ref: '#/definitions/dto.JsonInternalServerError'
       summary: Forgot Password
       tags:
       - auth
@@ -354,7 +354,7 @@ paths:
         name: data
         required: true
         schema:
-          $ref: '#/definitions/entity.LoginRequest'
+          $ref: '#/definitions/dto.LoginRequest'
       produces:
       - application/json
       responses:
@@ -362,7 +362,7 @@ paths:
           description: Data
           schema:
             allOf:
-            - $ref: '#/definitions/entity.JsonSuccess'
+            - $ref: '#/definitions/dto.JsonSuccess'
             - properties:
                 data:
                   type: string
@@ -370,15 +370,15 @@ paths:
         "400":
           description: Validation error
           schema:
-            $ref: '#/definitions/entity.JsonBadRequest'
+            $ref: '#/definitions/dto.JsonBadRequest'
         "404":
           description: Data not found
           schema:
-            $ref: '#/definitions/entity.JsonNotFound'
+            $ref: '#/definitions/dto.JsonNotFound'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/entity.JsonInternalServerError'
+            $ref: '#/definitions/dto.JsonInternalServerError'
       summary: Login
       tags:
       - auth
@@ -392,7 +392,7 @@ paths:
           description: Data
           schema:
             allOf:
-            - $ref: '#/definitions/entity.JsonSuccess'
+            - $ref: '#/definitions/dto.JsonSuccess'
             - properties:
                 data:
                   type: object
@@ -400,15 +400,15 @@ paths:
         "400":
           description: Validation error
           schema:
-            $ref: '#/definitions/entity.JsonBadRequest'
+            $ref: '#/definitions/dto.JsonBadRequest'
         "404":
           description: Data not found
           schema:
-            $ref: '#/definitions/entity.JsonNotFound'
+            $ref: '#/definitions/dto.JsonNotFound'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/entity.JsonInternalServerError'
+            $ref: '#/definitions/dto.JsonInternalServerError'
       security:
       - Bearer: []
       summary: Logout
@@ -423,7 +423,7 @@ paths:
         name: data
         required: true
         schema:
-          $ref: '#/definitions/entity.CreateUserRequest'
+          $ref: '#/definitions/dto.CreateUserRequest'
       produces:
       - application/json
       responses:
@@ -431,7 +431,7 @@ paths:
           description: Data
           schema:
             allOf:
-            - $ref: '#/definitions/entity.JsonCreated'
+            - $ref: '#/definitions/dto.JsonCreated'
             - properties:
                 data:
                   type: object
@@ -439,15 +439,15 @@ paths:
         "400":
           description: Validation error
           schema:
-            $ref: '#/definitions/entity.JsonBadRequest'
+            $ref: '#/definitions/dto.JsonBadRequest'
         "404":
           description: Data not found
           schema:
-            $ref: '#/definitions/entity.JsonNotFound'
+            $ref: '#/definitions/dto.JsonNotFound'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/entity.JsonInternalServerError'
+            $ref: '#/definitions/dto.JsonInternalServerError'
       summary: Register
       tags:
       - auth
@@ -460,7 +460,7 @@ paths:
         name: data
         required: true
         schema:
-          $ref: '#/definitions/entity.ResetPasswordRequest'
+          $ref: '#/definitions/dto.ResetPasswordRequest'
       produces:
       - application/json
       responses:
@@ -468,7 +468,7 @@ paths:
           description: Data
           schema:
             allOf:
-            - $ref: '#/definitions/entity.JsonSuccess'
+            - $ref: '#/definitions/dto.JsonSuccess'
             - properties:
                 data:
                   type: object
@@ -476,15 +476,15 @@ paths:
         "400":
           description: Validation error
           schema:
-            $ref: '#/definitions/entity.JsonBadRequest'
+            $ref: '#/definitions/dto.JsonBadRequest'
         "404":
           description: Data not found
           schema:
-            $ref: '#/definitions/entity.JsonNotFound'
+            $ref: '#/definitions/dto.JsonNotFound'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/entity.JsonInternalServerError'
+            $ref: '#/definitions/dto.JsonInternalServerError'
       summary: Reset Password
       tags:
       - auth
@@ -527,25 +527,25 @@ paths:
           description: Data
           schema:
             allOf:
-            - $ref: '#/definitions/entity.Response'
+            - $ref: '#/definitions/dto.Response'
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/entity.CustomerResponse'
+                    $ref: '#/definitions/dto.CustomerResponse'
                   type: array
               type: object
         "400":
           description: Validation error
           schema:
-            $ref: '#/definitions/entity.JsonBadRequest'
+            $ref: '#/definitions/dto.JsonBadRequest'
         "404":
           description: Data not found
           schema:
-            $ref: '#/definitions/entity.JsonNotFound'
+            $ref: '#/definitions/dto.JsonNotFound'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/entity.JsonInternalServerError'
+            $ref: '#/definitions/dto.JsonInternalServerError'
       security:
       - Bearer: []
       summary: Get all customers.
@@ -577,7 +577,7 @@ paths:
           description: Data
           schema:
             allOf:
-            - $ref: '#/definitions/entity.JsonCreated'
+            - $ref: '#/definitions/dto.JsonCreated'
             - properties:
                 data:
                   type: object
@@ -585,15 +585,15 @@ paths:
         "400":
           description: Validation error
           schema:
-            $ref: '#/definitions/entity.JsonBadRequest'
+            $ref: '#/definitions/dto.JsonBadRequest'
         "404":
           description: Data not found
           schema:
-            $ref: '#/definitions/entity.JsonNotFound'
+            $ref: '#/definitions/dto.JsonNotFound'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/entity.JsonInternalServerError'
+            $ref: '#/definitions/dto.JsonInternalServerError'
       security:
       - Bearer: []
       summary: Create customer
@@ -615,23 +615,23 @@ paths:
           description: Data
           schema:
             allOf:
-            - $ref: '#/definitions/entity.JsonSuccess'
+            - $ref: '#/definitions/dto.JsonSuccess'
             - properties:
                 data:
-                  $ref: '#/definitions/entity.CustomerResponse'
+                  $ref: '#/definitions/dto.CustomerResponse'
               type: object
         "400":
           description: Validation error
           schema:
-            $ref: '#/definitions/entity.JsonBadRequest'
+            $ref: '#/definitions/dto.JsonBadRequest'
         "404":
           description: Data not found
           schema:
-            $ref: '#/definitions/entity.JsonNotFound'
+            $ref: '#/definitions/dto.JsonNotFound'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/entity.JsonInternalServerError'
+            $ref: '#/definitions/dto.JsonInternalServerError'
       security:
       - Bearer: []
       summary: get customer by id.
@@ -645,7 +645,7 @@ paths:
         name: data
         required: true
         schema:
-          $ref: '#/definitions/entity.UpdateCustomerRequest'
+          $ref: '#/definitions/dto.UpdateCustomerRequest'
       - description: customer_id
         in: path
         name: customerId
@@ -658,7 +658,7 @@ paths:
           description: Data
           schema:
             allOf:
-            - $ref: '#/definitions/entity.JsonSuccess'
+            - $ref: '#/definitions/dto.JsonSuccess'
             - properties:
                 data:
                   type: object
@@ -666,15 +666,15 @@ paths:
         "400":
           description: Validation error
           schema:
-            $ref: '#/definitions/entity.JsonBadRequest'
+            $ref: '#/definitions/dto.JsonBadRequest'
         "404":
           description: Data not found
           schema:
-            $ref: '#/definitions/entity.JsonNotFound'
+            $ref: '#/definitions/dto.JsonNotFound'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/entity.JsonInternalServerError'
+            $ref: '#/definitions/dto.JsonInternalServerError'
       security:
       - Bearer: []
       summary: update customer
@@ -689,7 +689,7 @@ paths:
         name: data
         required: true
         schema:
-          $ref: '#/definitions/entity.DeleteBatchCustomerRequest'
+          $ref: '#/definitions/dto.DeleteBatchCustomerRequest'
       produces:
       - application/json
       responses:
@@ -697,7 +697,7 @@ paths:
           description: Data
           schema:
             allOf:
-            - $ref: '#/definitions/entity.JsonSuccess'
+            - $ref: '#/definitions/dto.JsonSuccess'
             - properties:
                 data:
                   type: object
@@ -705,15 +705,15 @@ paths:
         "400":
           description: Validation error
           schema:
-            $ref: '#/definitions/entity.JsonBadRequest'
+            $ref: '#/definitions/dto.JsonBadRequest'
         "404":
           description: Data not found
           schema:
-            $ref: '#/definitions/entity.JsonNotFound'
+            $ref: '#/definitions/dto.JsonNotFound'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/entity.JsonInternalServerError'
+            $ref: '#/definitions/dto.JsonInternalServerError'
       security:
       - Bearer: []
       summary: Delete batch customer
@@ -727,7 +727,7 @@ paths:
         name: data
         required: true
         schema:
-          $ref: '#/definitions/entity.CreateCustomerBatchRequest'
+          $ref: '#/definitions/dto.CreateCustomerBatchRequest'
       produces:
       - application/json
       responses:
@@ -735,7 +735,7 @@ paths:
           description: Data
           schema:
             allOf:
-            - $ref: '#/definitions/entity.JsonCreated'
+            - $ref: '#/definitions/dto.JsonCreated'
             - properties:
                 data:
                   type: object
@@ -743,15 +743,15 @@ paths:
         "400":
           description: Validation error
           schema:
-            $ref: '#/definitions/entity.JsonBadRequest'
+            $ref: '#/definitions/dto.JsonBadRequest'
         "404":
           description: Data not found
           schema:
-            $ref: '#/definitions/entity.JsonNotFound'
+            $ref: '#/definitions/dto.JsonNotFound'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/entity.JsonInternalServerError'
+            $ref: '#/definitions/dto.JsonInternalServerError'
       security:
       - Bearer: []
       summary: Create customer batch
@@ -784,7 +784,7 @@ paths:
           description: Data
           schema:
             allOf:
-            - $ref: '#/definitions/entity.JsonSuccess'
+            - $ref: '#/definitions/dto.JsonSuccess'
             - properties:
                 data:
                   type: string
@@ -792,15 +792,15 @@ paths:
         "400":
           description: Validation error
           schema:
-            $ref: '#/definitions/entity.JsonBadRequest'
+            $ref: '#/definitions/dto.JsonBadRequest'
         "404":
           description: Data not found
           schema:
-            $ref: '#/definitions/entity.JsonNotFound'
+            $ref: '#/definitions/dto.JsonNotFound'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/entity.JsonInternalServerError'
+            $ref: '#/definitions/dto.JsonInternalServerError'
       security:
       - Bearer: []
       summary: Export Excel customer.
@@ -824,7 +824,7 @@ paths:
           description: Data
           schema:
             allOf:
-            - $ref: '#/definitions/entity.JsonSuccess'
+            - $ref: '#/definitions/dto.JsonSuccess'
             - properties:
                 data:
                   type: string
@@ -832,15 +832,15 @@ paths:
         "400":
           description: Validation error
           schema:
-            $ref: '#/definitions/entity.JsonBadRequest'
+            $ref: '#/definitions/dto.JsonBadRequest'
         "404":
           description: Data not found
           schema:
-            $ref: '#/definitions/entity.JsonNotFound'
+            $ref: '#/definitions/dto.JsonNotFound'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/entity.JsonInternalServerError'
+            $ref: '#/definitions/dto.JsonInternalServerError'
       security:
       - Bearer: []
       summary: Import Excel customer.
@@ -873,25 +873,25 @@ paths:
           description: Data
           schema:
             allOf:
-            - $ref: '#/definitions/entity.Response'
+            - $ref: '#/definitions/dto.Response'
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/entity.UserResponse'
+                    $ref: '#/definitions/dto.UserResponse'
                   type: array
               type: object
         "400":
           description: Validation error
           schema:
-            $ref: '#/definitions/entity.JsonBadRequest'
+            $ref: '#/definitions/dto.JsonBadRequest'
         "404":
           description: Data not found
           schema:
-            $ref: '#/definitions/entity.JsonNotFound'
+            $ref: '#/definitions/dto.JsonNotFound'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/entity.JsonInternalServerError'
+            $ref: '#/definitions/dto.JsonInternalServerError'
       security:
       - Bearer: []
       summary: Get all users.
@@ -905,7 +905,7 @@ paths:
         name: data
         required: true
         schema:
-          $ref: '#/definitions/entity.CreateUserRequest'
+          $ref: '#/definitions/dto.CreateUserRequest'
       produces:
       - application/json
       responses:
@@ -913,7 +913,7 @@ paths:
           description: Data
           schema:
             allOf:
-            - $ref: '#/definitions/entity.JsonCreated'
+            - $ref: '#/definitions/dto.JsonCreated'
             - properties:
                 data:
                   type: object
@@ -921,15 +921,15 @@ paths:
         "400":
           description: Validation error
           schema:
-            $ref: '#/definitions/entity.JsonBadRequest'
+            $ref: '#/definitions/dto.JsonBadRequest'
         "404":
           description: Data not found
           schema:
-            $ref: '#/definitions/entity.JsonNotFound'
+            $ref: '#/definitions/dto.JsonNotFound'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/entity.JsonInternalServerError'
+            $ref: '#/definitions/dto.JsonInternalServerError'
       security:
       - Bearer: []
       summary: Create user
@@ -951,7 +951,7 @@ paths:
           description: Data
           schema:
             allOf:
-            - $ref: '#/definitions/entity.JsonSuccess'
+            - $ref: '#/definitions/dto.JsonSuccess'
             - properties:
                 data:
                   type: object
@@ -959,15 +959,15 @@ paths:
         "400":
           description: Validation error
           schema:
-            $ref: '#/definitions/entity.JsonBadRequest'
+            $ref: '#/definitions/dto.JsonBadRequest'
         "404":
           description: Data not found
           schema:
-            $ref: '#/definitions/entity.JsonNotFound'
+            $ref: '#/definitions/dto.JsonNotFound'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/entity.JsonInternalServerError'
+            $ref: '#/definitions/dto.JsonInternalServerError'
       security:
       - Bearer: []
       summary: Get user by id.
@@ -986,7 +986,7 @@ paths:
         name: data
         required: true
         schema:
-          $ref: '#/definitions/entity.UpdateUserRequest'
+          $ref: '#/definitions/dto.UpdateUserRequest'
       produces:
       - application/json
       responses:
@@ -994,7 +994,7 @@ paths:
           description: Data
           schema:
             allOf:
-            - $ref: '#/definitions/entity.JsonSuccess'
+            - $ref: '#/definitions/dto.JsonSuccess'
             - properties:
                 data:
                   type: object
@@ -1002,15 +1002,15 @@ paths:
         "400":
           description: Validation error
           schema:
-            $ref: '#/definitions/entity.JsonBadRequest'
+            $ref: '#/definitions/dto.JsonBadRequest'
         "404":
           description: Data not found
           schema:
-            $ref: '#/definitions/entity.JsonNotFound'
+            $ref: '#/definitions/dto.JsonNotFound'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/entity.JsonInternalServerError'
+            $ref: '#/definitions/dto.JsonInternalServerError'
       security:
       - Bearer: []
       summary: Update user
@@ -1025,7 +1025,7 @@ paths:
         name: data
         required: true
         schema:
-          $ref: '#/definitions/entity.DeleteBatchUserRequest'
+          $ref: '#/definitions/dto.DeleteBatchUserRequest'
       produces:
       - application/json
       responses:
@@ -1033,7 +1033,7 @@ paths:
           description: Data
           schema:
             allOf:
-            - $ref: '#/definitions/entity.JsonSuccess'
+            - $ref: '#/definitions/dto.JsonSuccess'
             - properties:
                 data:
                   type: object
@@ -1041,15 +1041,15 @@ paths:
         "400":
           description: Validation error
           schema:
-            $ref: '#/definitions/entity.JsonBadRequest'
+            $ref: '#/definitions/dto.JsonBadRequest'
         "404":
           description: Data not found
           schema:
-            $ref: '#/definitions/entity.JsonNotFound'
+            $ref: '#/definitions/dto.JsonNotFound'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/entity.JsonInternalServerError'
+            $ref: '#/definitions/dto.JsonInternalServerError'
       security:
       - Bearer: []
       summary: Delete batch user
@@ -1084,7 +1084,7 @@ paths:
           description: Data
           schema:
             allOf:
-            - $ref: '#/definitions/entity.JsonSuccess'
+            - $ref: '#/definitions/dto.JsonSuccess'
             - properties:
                 data:
                   type: string
@@ -1092,15 +1092,15 @@ paths:
         "400":
           description: Validation error
           schema:
-            $ref: '#/definitions/entity.JsonBadRequest'
+            $ref: '#/definitions/dto.JsonBadRequest'
         "404":
           description: Data not found
           schema:
-            $ref: '#/definitions/entity.JsonNotFound'
+            $ref: '#/definitions/dto.JsonNotFound'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/entity.JsonInternalServerError'
+            $ref: '#/definitions/dto.JsonInternalServerError'
       security:
       - Bearer: []
       summary: Export Excel user.
@@ -1122,7 +1122,7 @@ paths:
           description: Data
           schema:
             allOf:
-            - $ref: '#/definitions/entity.JsonSuccess'
+            - $ref: '#/definitions/dto.JsonSuccess'
             - properties:
                 data:
                   type: string
@@ -1130,15 +1130,15 @@ paths:
         "400":
           description: Validation error
           schema:
-            $ref: '#/definitions/entity.JsonBadRequest'
+            $ref: '#/definitions/dto.JsonBadRequest'
         "404":
           description: Data not found
           schema:
-            $ref: '#/definitions/entity.JsonNotFound'
+            $ref: '#/definitions/dto.JsonNotFound'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/entity.JsonInternalServerError'
+            $ref: '#/definitions/dto.JsonInternalServerError'
       security:
       - Bearer: []
       summary: Import Excel user.

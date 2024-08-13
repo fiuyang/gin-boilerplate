@@ -7,8 +7,8 @@ import (
 	"github.com/tealeg/xlsx"
 	"math"
 	"mime/multipart"
+	"scylla/dto"
 	"scylla/entity"
-	"scylla/model"
 	"scylla/pkg/exception"
 	"scylla/pkg/helper"
 	"scylla/repository"
@@ -17,14 +17,14 @@ import (
 )
 
 type CustomerService interface {
-	Create(ctx context.Context, request entity.CreateCustomerRequest) error
-	CreateBatch(ctx context.Context, request entity.CreateCustomerBatchRequest)
-	Update(ctx context.Context, request entity.UpdateCustomerRequest)
-	DeleteBatch(ctx context.Context, request entity.DeleteBatchCustomerRequest)
-	FindById(ctx context.Context, request entity.CustomerParams) (response entity.CustomerResponse)
-	FindAll(ctx context.Context, dataFilter entity.CustomerQueryFilter) (response []entity.CustomerResponse)
-	FindAllPaging(ctx context.Context, dataFilter entity.CustomerQueryFilter) (response []entity.CustomerResponse, paging entity.Meta)
-	Export(ctx context.Context, dataFilter entity.CustomerQueryFilter) (string, error)
+	Create(ctx context.Context, request dto.CreateCustomerRequest) error
+	CreateBatch(ctx context.Context, request dto.CreateCustomerBatchRequest)
+	Update(ctx context.Context, request dto.UpdateCustomerRequest)
+	DeleteBatch(ctx context.Context, request dto.DeleteBatchCustomerRequest)
+	FindById(ctx context.Context, request dto.CustomerParams) (response dto.CustomerResponse)
+	FindAll(ctx context.Context, dataFilter dto.CustomerQueryFilter) (response []dto.CustomerResponse)
+	FindAllPaging(ctx context.Context, dataFilter dto.CustomerQueryFilter) (response []dto.CustomerResponse, paging dto.Meta)
+	Export(ctx context.Context, dataFilter dto.CustomerQueryFilter) (string, error)
 	Import(ctx context.Context, file *multipart.FileHeader) error
 }
 
@@ -40,11 +40,11 @@ func NewCustomerServiceImpl(customerRepo repository.CustomerRepo, validate *vali
 	}
 }
 
-func (service *CustomerServiceImpl) Create(ctx context.Context, request entity.CreateCustomerRequest) error {
+func (service *CustomerServiceImpl) Create(ctx context.Context, request dto.CreateCustomerRequest) error {
 	err := service.validate.Struct(request)
 	helper.ErrorPanic(err)
 
-	dataset := model.Customer{
+	dataset := entity.Customer{
 		Username: request.Username,
 		Email:    request.Email,
 		Phone:    request.Phone,
@@ -59,13 +59,13 @@ func (service *CustomerServiceImpl) Create(ctx context.Context, request entity.C
 	return nil
 }
 
-func (service *CustomerServiceImpl) CreateBatch(ctx context.Context, request entity.CreateCustomerBatchRequest) {
+func (service *CustomerServiceImpl) CreateBatch(ctx context.Context, request dto.CreateCustomerBatchRequest) {
 	err := service.validate.Struct(request)
 	helper.ErrorPanic(err)
 
-	var customers []model.Customer
+	var customers []entity.Customer
 	for _, req := range request.Customers {
-		customer := model.Customer{
+		customer := entity.Customer{
 			Username: req.Username,
 			Email:    req.Email,
 			Phone:    req.Phone,
@@ -82,7 +82,7 @@ func (service *CustomerServiceImpl) CreateBatch(ctx context.Context, request ent
 	}
 }
 
-func (service *CustomerServiceImpl) Update(ctx context.Context, request entity.UpdateCustomerRequest) {
+func (service *CustomerServiceImpl) Update(ctx context.Context, request dto.UpdateCustomerRequest) {
 	err := service.validate.Struct(request)
 	helper.ErrorPanic(err)
 
@@ -102,7 +102,7 @@ func (service *CustomerServiceImpl) Update(ctx context.Context, request entity.U
 	}
 }
 
-func (service *CustomerServiceImpl) DeleteBatch(ctx context.Context, request entity.DeleteBatchCustomerRequest) {
+func (service *CustomerServiceImpl) DeleteBatch(ctx context.Context, request dto.DeleteBatchCustomerRequest) {
 	err := service.validate.Struct(request)
 	helper.ErrorPanic(err)
 
@@ -112,7 +112,7 @@ func (service *CustomerServiceImpl) DeleteBatch(ctx context.Context, request ent
 	}
 }
 
-func (service *CustomerServiceImpl) FindById(ctx context.Context, request entity.CustomerParams) (response entity.CustomerResponse) {
+func (service *CustomerServiceImpl) FindById(ctx context.Context, request dto.CustomerParams) (response dto.CustomerResponse) {
 	result, err := service.customerRepo.FindById(ctx, request.CustomerId)
 
 	if err != nil {
@@ -123,7 +123,7 @@ func (service *CustomerServiceImpl) FindById(ctx context.Context, request entity
 	return response
 }
 
-func (service *CustomerServiceImpl) FindAll(ctx context.Context, dataFilter entity.CustomerQueryFilter) (response []entity.CustomerResponse) {
+func (service *CustomerServiceImpl) FindAll(ctx context.Context, dataFilter dto.CustomerQueryFilter) (response []dto.CustomerResponse) {
 	result, err := service.customerRepo.FindAll(ctx, dataFilter)
 
 	if err != nil {
@@ -131,19 +131,19 @@ func (service *CustomerServiceImpl) FindAll(ctx context.Context, dataFilter enti
 	}
 
 	for _, row := range result {
-		var res entity.CustomerResponse
+		var res dto.CustomerResponse
 		helper.Automapper(row, &res)
 		response = append(response, res)
 	}
 	return response
 }
 
-func (service *CustomerServiceImpl) FindAllPaging(ctx context.Context, dataFilter entity.CustomerQueryFilter) (response []entity.CustomerResponse, paging entity.Meta) {
+func (service *CustomerServiceImpl) FindAllPaging(ctx context.Context, dataFilter dto.CustomerQueryFilter) (response []dto.CustomerResponse, paging dto.Meta) {
 
 	result := service.customerRepo.FindAllPaging(ctx, dataFilter)
 
 	for _, value := range result {
-		var res entity.CustomerResponse
+		var res dto.CustomerResponse
 		helper.Automapper(value, &res)
 
 		response = append(response, res)
@@ -172,7 +172,7 @@ func (service *CustomerServiceImpl) FindAllPaging(ctx context.Context, dataFilte
 	return response, paging
 }
 
-func (service *CustomerServiceImpl) Export(ctx context.Context, dataFilter entity.CustomerQueryFilter) (string, error) {
+func (service *CustomerServiceImpl) Export(ctx context.Context, dataFilter dto.CustomerQueryFilter) (string, error) {
 	// Create a new Excel file
 	file := xlsx.NewFile()
 	sheet, err := file.AddSheet("Customer")
@@ -314,7 +314,7 @@ func (service *CustomerServiceImpl) Import(ctx context.Context, file *multipart.
 				}
 			}
 
-			var customer model.Customer
+			var customer entity.Customer
 
 			for i, cell := range row.Cells {
 				switch i {

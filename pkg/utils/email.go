@@ -8,7 +8,7 @@ import (
 	"html/template"
 	"os"
 	"path/filepath"
-	"scylla/model"
+	"scylla/entity"
 	"scylla/pkg/config"
 	"scylla/pkg/exception"
 )
@@ -38,20 +38,15 @@ func ParseTemplateDir(dir string) (*template.Template, error) {
 	return template.ParseFiles(paths...)
 }
 
-func SendEmail(user *model.User, data *EmailData, emailTemp string) {
-	config, err := config.LoadConfig(".")
-
-	if err != nil {
-		panic(exception.NewInternalServerErrorHandler(err.Error()))
-	}
-
+func SendEmail(user *entity.User, data *EmailData, emailTemp string) {
+	conf := config.Get()
 	// Sender data.
-	from := config.EmailFrom
-	smtpPass := config.SMTPPass
-	smtpUser := config.SMTPUser
+	from := conf.Email.From
+	smtpPass := conf.Email.Pass
+	smtpUser := conf.Email.User
 	to := user.Email
-	smtpHost := config.SMTPHost
-	smtpPort := config.SMTPPort
+	smtpHost := conf.Email.Host
+	smtpPort := conf.Email.Port
 
 	var body bytes.Buffer
 

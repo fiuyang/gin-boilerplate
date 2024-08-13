@@ -11,6 +11,7 @@ import (
 
 func JwtMiddleware() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
+		conf := config.Get()
 		var token string
 		authorizationHeader := ctx.GetHeader("Authorization")
 		fields := strings.Fields(authorizationHeader)
@@ -29,13 +30,7 @@ func JwtMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		config, err := config.LoadConfig(".")
-		if err != nil {
-			panic(exception.NewInternalServerErrorHandler(err.Error()))
-			return
-		}
-
-		sub, err := utils.ValidateToken(token, config.TokenSecret)
+		sub, err := utils.ValidateToken(token, conf.Jwt.Secret)
 		if err != nil {
 			panic(exception.NewUnauthorizedHandler(err.Error()))
 			//ctx.AbortWithStatusJSON(401, gin.H{"error": err.Error()})

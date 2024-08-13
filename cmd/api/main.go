@@ -3,17 +3,20 @@ package main
 import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"net/http"
 	"scylla/controller"
 	"scylla/docs"
+	"scylla/dto"
 	"scylla/pkg/config"
+	"scylla/pkg/connection"
 	"scylla/pkg/exception"
 	"scylla/pkg/helper"
+	"scylla/pkg/middleware"
 	"scylla/pkg/utils"
 	"scylla/repository"
-	"scylla/routes"
 	"scylla/service"
 	"time"
 )
@@ -25,60 +28,47 @@ import (
 // @securityDefinitions.apikey	Bearer
 // @in							header
 // @name						Authorization
-// @description				Type "Bearer" followed by a space and JWT token.
+// @description				   Type "Bearer" followed by a space and JWT token.
 func main() {
+	//config
+	conf := config.Get()
 
-	loadConfig, err := config.LoadConfig(".")
-	if err != nil {
-		panic(exception.NewInternalServerErrorHandler(err.Error()))
-	}
+	//database
+	db := connection.GetDatabase(conf.Database)
 
-	//Database
-	db := config.ConnectionDB(&loadConfig)
+	//validate
+	validate := utils.InitializeValidator()
 
-	//Validate
-	validate := utils.InitializeValidator(db)
-
-	//Swagger
-	if loadConfig.Environment != "dev" {
-		docs.SwaggerInfo.Host = loadConfig.SwaggerHost
-		docs.SwaggerInfo.BasePath = loadConfig.SwaggerUrl
+	//environment swagger
+	if conf.Swagger.Mode != "dev" {
+		docs.SwaggerInfo.Host = conf.Swagger.Host
+		docs.SwaggerInfo.BasePath = conf.Swagger.Url
 	} else {
 		docs.SwaggerInfo.Host = "localhost:8000"
 		docs.SwaggerInfo.BasePath = "/api/v1"
 	}
 
-	//Init Repository
+	//repository
 	userRepo := repository.NewUserRepoImpl(db)
 	passResetRepo := repository.NewPassResetRepoImpl(db)
 	customerRepo := repository.NewCustomerRepoImpl(db)
 
-	//Init Service
-	authService := service.NewAuthServiceImpl(userRepo, passResetRepo, validate)
+	//service
+	authService := service.NewAuthServiceImpl(conf, userRepo, passResetRepo, validate)
 	customerService := service.NewCustomerServiceImpl(customerRepo, validate)
-	userSevice := service.NewUserServiceImpl(userRepo, validate)
+	userService := service.NewUserServiceImpl(userRepo, validate)
 
-	//Init controller
+	//controller
 	authController := controller.NewAuthController(authService)
 	customerController := controller.NewCustomerController(customerService)
-	userController := controller.NewUserController(userSevice)
+	userController := controller.NewUserController(userService)
 
-	//routes v1
-	routesV1 := routes.NewRoutesV1(
-		authController,
-		customerController,
-		userController,
-	)
-
+	//environment gin
 	app := gin.Default()
 	app.Use(gin.Logger())
 	app.Use(gin.Recovery())
 	app.Use(gin.CustomRecovery(exception.ExceptionHandlers))
-
-	//docs swagger
-	app.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-
-	//cors
+	app.Use(middleware.TracingMiddleware())
 	app.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},
 		AllowMethods:     []string{"PUT", "PATCH", "POST", "GET", "DELETE"},
@@ -87,13 +77,25 @@ func main() {
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
 	}))
-
-	app.Use(func(c *gin.Context) {
-		routesV1.ServeHTTP(c.Writer, c.Request)
+	app.NoRoute(func(ctx *gin.Context) {
+		ctx.JSON(http.StatusNotFound, dto.Error{
+			Code:    http.StatusNotFound,
+			Status:  "NOT FOUND",
+			Errors:  "Page Not Found",
+			TraceID: uuid.New().String(),
+		})
 	})
+	//docs swagger
+	app.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
+	//routes v1
+	authController.Route(app)
+	customerController.Route(app)
+	userController.Route(app)
+
+	//server
 	server := &http.Server{
-		Addr:           ":" + loadConfig.ServerPort,
+		Addr:           ":" + conf.Server.Port,
 		Handler:        app,
 		ReadTimeout:    10 * time.Second,
 		WriteTimeout:   10 * time.Second,

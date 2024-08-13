@@ -6,8 +6,8 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/tealeg/xlsx"
 	"mime/multipart"
+	"scylla/dto"
 	"scylla/entity"
-	"scylla/model"
 	"scylla/pkg/exception"
 	"scylla/pkg/helper"
 	"scylla/pkg/utils"
@@ -18,12 +18,12 @@ import (
 )
 
 type UserService interface {
-	Create(ctx context.Context, request entity.CreateUserRequest)
-	Update(ctx context.Context, request entity.UpdateUserRequest)
-	DeleteBatch(ctx context.Context, request entity.DeleteBatchUserRequest)
-	FindAll(ctx context.Context, dataFilter entity.UserQueryFilter) (response []entity.UserResponse)
-	FindById(ctx context.Context, params entity.UserParams) (response entity.UserResponse)
-	Export(ctx context.Context, dataFilter entity.UserQueryFilter) (string, error)
+	Create(ctx context.Context, request dto.CreateUserRequest)
+	Update(ctx context.Context, request dto.UpdateUserRequest)
+	DeleteBatch(ctx context.Context, request dto.DeleteBatchUserRequest)
+	FindAll(ctx context.Context, dataFilter dto.UserQueryFilter) (response []dto.UserResponse)
+	FindById(ctx context.Context, params dto.UserParams) (response dto.UserResponse)
+	Export(ctx context.Context, dataFilter dto.UserQueryFilter) (string, error)
 	Import(ctx context.Context, file *multipart.FileHeader) error
 }
 
@@ -39,14 +39,14 @@ func NewUserServiceImpl(userRepo repository.UserRepo, validate *validator.Valida
 	}
 }
 
-func (service *UserServiceImpl) Create(ctx context.Context, request entity.CreateUserRequest) {
+func (service *UserServiceImpl) Create(ctx context.Context, request dto.CreateUserRequest) {
 	err := service.validate.Struct(request)
 	helper.ErrorPanic(err)
 
 	hashedPassword, err := utils.HashPassword(request.Password)
 	helper.ErrorPanic(err)
 
-	dataset := model.User{
+	dataset := entity.User{
 		Username: request.Username,
 		Email:    request.Email,
 		Password: hashedPassword,
@@ -59,7 +59,7 @@ func (service *UserServiceImpl) Create(ctx context.Context, request entity.Creat
 
 }
 
-func (service *UserServiceImpl) Update(ctx context.Context, request entity.UpdateUserRequest) {
+func (service *UserServiceImpl) Update(ctx context.Context, request dto.UpdateUserRequest) {
 	err := service.validate.Struct(request)
 	helper.ErrorPanic(err)
 
@@ -82,7 +82,7 @@ func (service *UserServiceImpl) Update(ctx context.Context, request entity.Updat
 	}
 }
 
-func (service *UserServiceImpl) DeleteBatch(ctx context.Context, request entity.DeleteBatchUserRequest) {
+func (service *UserServiceImpl) DeleteBatch(ctx context.Context, request dto.DeleteBatchUserRequest) {
 	err := service.validate.Struct(request)
 	helper.ErrorPanic(err)
 
@@ -92,7 +92,7 @@ func (service *UserServiceImpl) DeleteBatch(ctx context.Context, request entity.
 	}
 }
 
-func (service *UserServiceImpl) FindAll(ctx context.Context, dataFilter entity.UserQueryFilter) (response []entity.UserResponse) {
+func (service *UserServiceImpl) FindAll(ctx context.Context, dataFilter dto.UserQueryFilter) (response []dto.UserResponse) {
 	result, err := service.userRepo.FindAll(ctx, dataFilter)
 
 	if err != nil {
@@ -100,14 +100,14 @@ func (service *UserServiceImpl) FindAll(ctx context.Context, dataFilter entity.U
 	}
 
 	for _, row := range result {
-		var res entity.UserResponse
+		var res dto.UserResponse
 		helper.Automapper(row, &res)
 		response = append(response, res)
 	}
 	return response
 }
 
-func (service *UserServiceImpl) FindById(ctx context.Context, params entity.UserParams) (response entity.UserResponse) {
+func (service *UserServiceImpl) FindById(ctx context.Context, params dto.UserParams) (response dto.UserResponse) {
 	result, err := service.userRepo.FindById(ctx, params.UserId)
 
 	if err != nil {
@@ -118,7 +118,7 @@ func (service *UserServiceImpl) FindById(ctx context.Context, params entity.User
 	return response
 }
 
-func (service *UserServiceImpl) Export(ctx context.Context, dataFilter entity.UserQueryFilter) (string, error) {
+func (service *UserServiceImpl) Export(ctx context.Context, dataFilter dto.UserQueryFilter) (string, error) {
 	// Create a new Excel file
 	file := xlsx.NewFile()
 	sheet, err := file.AddSheet("Users")
@@ -268,7 +268,7 @@ func (service *UserServiceImpl) Import(ctx context.Context, file *multipart.File
 				}
 			}
 
-			var user model.User
+			var user entity.User
 
 			for i, cell := range row.Cells {
 				switch i {

@@ -1,4 +1,4 @@
-package entity
+package dto
 
 type JsonBadRequest struct {
 	Code    int                    `json:"code" example:"400"`
