@@ -22,8 +22,7 @@ type CustomerService interface {
 	Update(ctx context.Context, request dto.UpdateCustomerRequest)
 	DeleteBatch(ctx context.Context, request dto.DeleteBatchCustomerRequest)
 	FindById(ctx context.Context, request dto.CustomerParams) (response dto.CustomerResponse)
-	FindAll(ctx context.Context, dataFilter dto.CustomerQueryFilter) (response []dto.CustomerResponse)
-	FindAllPaging(ctx context.Context, dataFilter dto.CustomerQueryFilter) (response []dto.CustomerResponse, paging dto.Meta)
+	FindAll(ctx context.Context, dataFilter dto.CustomerQueryFilter) (response []dto.CustomerResponse, paging dto.Meta)
 	Export(ctx context.Context, dataFilter dto.CustomerQueryFilter) (string, error)
 	Import(ctx context.Context, file *multipart.FileHeader) error
 }
@@ -123,24 +122,9 @@ func (service *CustomerServiceImpl) FindById(ctx context.Context, request dto.Cu
 	return response
 }
 
-func (service *CustomerServiceImpl) FindAll(ctx context.Context, dataFilter dto.CustomerQueryFilter) (response []dto.CustomerResponse) {
-	result, err := service.customerRepo.FindAll(ctx, dataFilter)
+func (service *CustomerServiceImpl) FindAll(ctx context.Context, dataFilter dto.CustomerQueryFilter) (response []dto.CustomerResponse, paging dto.Meta) {
 
-	if err != nil {
-		panic(exception.NewInternalServerErrorHandler(err.Error()))
-	}
-
-	for _, row := range result {
-		var res dto.CustomerResponse
-		helper.Automapper(row, &res)
-		response = append(response, res)
-	}
-	return response
-}
-
-func (service *CustomerServiceImpl) FindAllPaging(ctx context.Context, dataFilter dto.CustomerQueryFilter) (response []dto.CustomerResponse, paging dto.Meta) {
-
-	result := service.customerRepo.FindAllPaging(ctx, dataFilter)
+	result, total := service.customerRepo.FindAll(ctx, dataFilter)
 
 	for _, value := range result {
 		var res dto.CustomerResponse
@@ -157,16 +141,9 @@ func (service *CustomerServiceImpl) FindAllPaging(ctx context.Context, dataFilte
 		dataFilter.Page = 1
 	}
 
-	var total int
-	if len(result) > 0 {
-		total = len(result)
-	} else {
-		total = 0
-	}
-
 	paging.Page = dataFilter.Page
 	paging.Limit = dataFilter.Limit
-	paging.TotalData = total
+	paging.TotalData = int(total)
 	paging.TotalPage = int(math.Ceil(float64(total) / float64(dataFilter.Limit)))
 
 	return response, paging
@@ -192,10 +169,7 @@ func (service *CustomerServiceImpl) Export(ctx context.Context, dataFilter dto.C
 		cell.SetStyle(style)
 	}
 
-	result, err := service.customerRepo.FindAll(ctx, dataFilter)
-	if err != nil {
-		panic(exception.NewInternalServerErrorHandler(err.Error()))
-	}
+	result, _ := service.customerRepo.FindAll(ctx, dataFilter)
 
 	dataStyle := xlsx.NewStyle()
 	dataStyle.Font = *xlsx.NewFont(12, "Calibri")

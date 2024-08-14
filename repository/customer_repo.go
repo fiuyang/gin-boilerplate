@@ -18,8 +18,7 @@ type CustomerRepo interface {
 	DeleteBatch(ctx context.Context, Ids []int) error
 	FindById(ctx context.Context, Id int) (data entity.Customer, err error)
 	FindByColumns(ctx context.Context, columns []string, queries []any) (entity.Customer, error)
-	FindAll(ctx context.Context, dataFilter dto.CustomerQueryFilter) (domain []dto.CustomerResponse, err error)
-	FindAllPaging(ctx context.Context, dataFilter dto.CustomerQueryFilter) (domain []dto.CustomerResponse)
+	FindAll(ctx context.Context, dataFilter dto.CustomerQueryFilter) (domain []dto.CustomerResponse, count int64)
 	CheckColumnExists(ctx context.Context, column string, value interface{}) bool
 }
 
@@ -117,50 +116,14 @@ func (repo *CustomerRepoImpl) FindByColumns(ctx context.Context, columns []strin
 	return data, nil
 }
 
-func (repo *CustomerRepoImpl) FindAll(ctx context.Context, dataFilter dto.CustomerQueryFilter) (domain []dto.CustomerResponse, err error) {
-	query := "SELECT id, username, email, phone, address, created_at FROM customers"
-	args := []interface{}{}
-
-	if dataFilter.Username != "" {
-		query += " WHERE username = ?"
-		args = append(args, dataFilter.Username)
-	}
-
-	if dataFilter.Email != "" {
-		query += " WHERE email = ?"
-		args = append(args, dataFilter.Email)
-	}
-
-	if dataFilter.StartDate != "" && dataFilter.EndDate != "" {
-		query += " WHERE created_at BETWEEN ? AND ?"
-		args = append(args, dataFilter.StartDate, dataFilter.EndDate)
-	}
-
-	rows, err := repo.db.WithContext(ctx).Raw(query, args...).Rows()
-	if err != nil {
-		return nil, rows.Err()
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var customer dto.CustomerResponse
-		err := rows.Scan(&customer.ID, &customer.Username, &customer.Email, &customer.Phone, &customer.Address, &customer.CreatedAt)
-		if err != nil {
-			return nil, err
-		}
-		domain = append(domain, customer)
-	}
-
-	return domain, nil
-}
-
-func (repo *CustomerRepoImpl) FindAllPaging(ctx context.Context, dataFilter dto.CustomerQueryFilter) (domain []dto.CustomerResponse) {
+func (repo *CustomerRepoImpl) FindAll(ctx context.Context, dataFilter dto.CustomerQueryFilter) (domain []dto.CustomerResponse, count int64) {
 	rawQuery := `
-		SELECT 
-			id, username, email, phone, address, created_at
-		FROM 
-			customers
-	`
+        SELECT 
+            id, username, email, phone, address, created_at
+        FROM 
+            customers
+    `
+
 	var filters []string
 	var args []interface{}
 
@@ -181,6 +144,10 @@ func (repo *CustomerRepoImpl) FindAllPaging(ctx context.Context, dataFilter dto.
 		rawQuery += " WHERE " + strings.Join(filters, " AND ")
 	}
 
+	countQuery := "SELECT COUNT(*) FROM (" + rawQuery + ") AS subquery"
+	resultCount := repo.db.Raw(countQuery, args...).WithContext(ctx).Scan(&count)
+	helper.ErrorPanic(resultCount.Error)
+
 	sortBy := "id DESC"
 	if dataFilter.Sort != "" {
 		var sortClauses []string
@@ -196,15 +163,25 @@ func (repo *CustomerRepoImpl) FindAllPaging(ctx context.Context, dataFilter dto.
 	}
 	rawQuery += " ORDER BY " + sortBy
 
-	if dataFilter.Limit > 0 && dataFilter.Page > 0 {
+	if dataFilter.All == true {
+		result := repo.db.Raw(rawQuery, args...).WithContext(ctx).Scan(&domain)
+		helper.ErrorPanic(result.Error)
+	} else {
+		if dataFilter.Page == 0 {
+			dataFilter.Page = 1
+		}
+		if dataFilter.Limit == 0 {
+			dataFilter.Limit = 10
+		}
+
 		offset := (dataFilter.Page - 1) * dataFilter.Limit
 		rawQuery += fmt.Sprintf(" LIMIT %d OFFSET %d", dataFilter.Limit, offset)
+
+		result := repo.db.Raw(rawQuery, args...).WithContext(ctx).Scan(&domain)
+		helper.ErrorPanic(result.Error)
 	}
 
-	result := repo.db.Raw(rawQuery, args...).WithContext(ctx).Scan(&domain)
-	helper.ErrorPanic(result.Error)
-
-	return domain
+	return domain, count
 }
 
 func (repo *CustomerRepoImpl) CheckColumnExists(ctx context.Context, column string, value interface{}) bool {

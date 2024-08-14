@@ -79,7 +79,7 @@ func (controller *UserController) Create(ctx *gin.Context) {
 //	@Param			data	body	dto.UpdateUserRequest	true	"update user"
 //	@Tags			users
 //	@Produce		application/json
-//	@Success		200	{object}	dto.JsonSuccess{data=nil}     "Data"
+//	@Success		200	{object}	dto.JsonSuccess{data=nil}       "Data"
 //	@Failure		400	{object}	dto.JsonBadRequest{}			"Validation error"
 //	@Failure		404	{object}	dto.JsonNotFound{}				"Data not found"
 //	@Failure		500	{object}	dto.JsonInternalServerError{}	"Internal server error"
@@ -272,7 +272,7 @@ func (controller *UserController) Export(ctx *gin.Context) {
 // @Produce		application/json
 // @Tags		users
 // @Param		data	formData	file	true	"import Excel user"
-// @Success		200		{object}	dto.JsonSuccess{data=string}   "Data"
+// @Success		200		{object}	dto.JsonSuccess{data=string}    "Data"
 // @Failure		400		{object}	dto.JsonBadRequest{}			"Validation error"
 // @Failure		404		{object}	dto.JsonNotFound{}				"Data not found"
 // @Failure		500		{object}	dto.JsonInternalServerError{}	"Internal server error"

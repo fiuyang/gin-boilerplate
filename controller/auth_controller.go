@@ -42,8 +42,8 @@ func (controller *AuthController) Route(app *gin.Engine) {
 // @Param		data	body	dto.LoginRequest	true	"login"
 // @Produce		application/json
 // @Tags		auth
-// @Success		200	{object}	dto.JsonSuccess{data=string}		"Data"
-// @Failure		400	{object}	dto.JsonBadRequest{}				"Validation error"
+// @Success		200	{object}	dto.JsonSuccess{data=string}	"Data"
+// @Failure		400	{object}	dto.JsonBadRequest{}			"Validation error"
 // @Failure		404	{object}	dto.JsonNotFound{}				"Data not found"
 // @Failure		500	{object}	dto.JsonInternalServerError{}	"Internal server error"
 // @Router		/auth/login [post]
@@ -78,7 +78,7 @@ func (controller *AuthController) Login(ctx *gin.Context) {
 // @Produce		application/json
 // @Tags		auth
 // @Success		201	{object}	dto.JsonCreated{data=nil}		"Data"
-// @Failure		400	{object}	dto.JsonBadRequest{}				"Validation error"
+// @Failure		400	{object}	dto.JsonBadRequest{}			"Validation error"
 // @Failure		404	{object}	dto.JsonNotFound{}				"Data not found"
 // @Failure		500	{object}	dto.JsonInternalServerError{}	"Internal server error"
 // @Router		/auth/register [post]
@@ -110,8 +110,8 @@ func (controller *AuthController) Register(ctx *gin.Context) {
 // @Param		data	body	dto.ForgotPasswordRequest	true	"forgot password"
 // @Produce		application/json
 // @Tags		auth
-// @Success		200	{object}	dto.JsonSuccess{data=string}		"Data"
-// @Failure		400	{object}	dto.JsonBadRequest{}				"Validation error"
+// @Success		200	{object}	dto.JsonSuccess{data=string}	"Data"
+// @Failure		400	{object}	dto.JsonBadRequest{}			"Validation error"
 // @Failure		404	{object}	dto.JsonNotFound{}				"Data not found"
 // @Failure		500	{object}	dto.JsonInternalServerError{}	"Internal server error"
 // @Router		/auth/forgot-password [post]
@@ -145,7 +145,7 @@ func (controller *AuthController) ForgotPassword(ctx *gin.Context) {
 // @Produce		application/json
 // @Tags		auth
 // @Success		200	{object}	dto.JsonSuccess{data=nil}		"Data"
-// @Failure		400	{object}	dto.JsonBadRequest{}				"Validation error"
+// @Failure		400	{object}	dto.JsonBadRequest{}			"Validation error"
 // @Failure		404	{object}	dto.JsonNotFound{}				"Data not found"
 // @Failure		500	{object}	dto.JsonInternalServerError{}	"Internal server error"
 // @Router		/auth/check-otp [post]
@@ -181,7 +181,7 @@ func (controller *AuthController) CheckOtp(ctx *gin.Context) {
 // @Produce		application/json
 // @Tags		auth
 // @Success		200	{object}	dto.JsonSuccess{data=nil}		"Data"
-// @Failure		400	{object}	dto.JsonBadRequest{}				"Validation error"
+// @Failure		400	{object}	dto.JsonBadRequest{}			"Validation error"
 // @Failure		404	{object}	dto.JsonNotFound{}				"Data not found"
 // @Failure		500	{object}	dto.JsonInternalServerError{}	"Internal server error"
 // @Router		/auth/reset-password [patch]
@@ -216,7 +216,7 @@ func (controller *AuthController) ResetPassword(ctx *gin.Context) {
 // @Produce		application/json
 // @Tags		auth
 // @Success		200	{object}	dto.JsonSuccess{data=nil}		"Data"
-// @Failure		400	{object}	dto.JsonBadRequest{}				"Validation error"
+// @Failure		400	{object}	dto.JsonBadRequest{}			"Validation error"
 // @Failure		404	{object}	dto.JsonNotFound{}				"Data not found"
 // @Failure		500	{object}	dto.JsonInternalServerError{}	"Internal server error"
 // @Router		/auth/logout [post]

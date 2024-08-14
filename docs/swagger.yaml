@@ -492,6 +492,10 @@ paths:
     get:
       description: Get all customers.
       parameters:
+      - description: true/false
+        in: query
+        name: all
+        type: string
       - description: limit
         in: query
         name: limit
@@ -546,8 +550,6 @@ paths:
           description: Internal server error
           schema:
             $ref: '#/definitions/dto.JsonInternalServerError'
-      security:
-      - Bearer: []
       summary: Get all customers.
       tags:
       - customers
@@ -761,6 +763,11 @@ paths:
     get:
       description: Export Excel customer.
       parameters:
+      - description: "true"
+        in: query
+        name: all
+        required: true
+        type: string
       - description: start_date
         in: query
         name: start_date

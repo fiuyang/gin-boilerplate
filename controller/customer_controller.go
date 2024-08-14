@@ -10,7 +10,6 @@ import (
 	"scylla/dto"
 	"scylla/pkg/exception"
 	"scylla/pkg/helper"
-	"scylla/pkg/middleware"
 	"scylla/pkg/utils"
 	"scylla/service"
 	"time"
@@ -27,8 +26,8 @@ func NewCustomerController(customerService service.CustomerService) *CustomerCon
 }
 
 func (controller *CustomerController) Route(app *gin.Engine) {
-	customerRouter := app.Group("/api/v1/customers", middleware.JwtMiddleware())
-	customerRouter.GET("", controller.FindAllPaging)
+	customerRouter := app.Group("/api/v1/customers")
+	customerRouter.GET("", controller.FindAll)
 	customerRouter.GET("/:customerId", controller.FindById)
 	customerRouter.POST("", controller.Create)
 	customerRouter.POST("/batch", controller.CreateBatch)
@@ -45,8 +44,8 @@ func (controller *CustomerController) Route(app *gin.Engine) {
 // @Param		data	formData	dto.CreateCustomerRequest	true	"create customer"
 // @Produce		application/json
 // @Tags		customers
-// @Success		201	{object}	dto.JsonCreated{data=nil}"Data"
-// @Failure		400	{object}	dto.JsonBadRequest{}				"Validation error"
+// @Success		201	{object}	dto.JsonCreated{data=nil}       "Data"
+// @Failure		400	{object}	dto.JsonBadRequest{}			"Validation error"
 // @Failure		404	{object}	dto.JsonNotFound{}				"Data not found"
 // @Failure		500	{object}	dto.JsonInternalServerError{}	"Internal server error"
 // @Router		/customers [post]
@@ -158,7 +157,7 @@ func (handler *CustomerController) Update(ctx *gin.Context) {
 //	@Produce		application/json
 //	@Tags			customers
 //	@Success		200	{object}	dto.JsonSuccess{data=nil}		"Data"
-//	@Failure		400	{object}	dto.JsonBadRequest{}				"Validation error"
+//	@Failure		400	{object}	dto.JsonBadRequest{}			"Validation error"
 //	@Failure		404	{object}	dto.JsonNotFound{}				"Data not found"
 //	@Failure		500	{object}	dto.JsonInternalServerError{}	"Internal server error"
 //	@Router			/customers/batch [delete]
@@ -224,6 +223,7 @@ func (handler *CustomerController) FindById(ctx *gin.Context) {
 // @Summary		Get all customers.
 // @Description	Get all customers.
 // @Produce		application/json
+// @Param	    all		    query	string	false	"true/false"
 // @Param		limit		query	string	false	"limit"
 // @Param		page		query	string	false	"page"
 // @Param		start_date	query	string	false	"start_date"
@@ -237,8 +237,7 @@ func (handler *CustomerController) FindById(ctx *gin.Context) {
 // @Failure		404	{object}	dto.JsonNotFound{}								"Data not found"
 // @Failure		500	{object}	dto.JsonInternalServerError{}					"Internal server error"
 // @Router		/customers [get]
-// @Security	Bearer
-func (handler *CustomerController) FindAllPaging(ctx *gin.Context) {
+func (handler *CustomerController) FindAll(ctx *gin.Context) {
 	c, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
@@ -248,7 +247,8 @@ func (handler *CustomerController) FindAllPaging(ctx *gin.Context) {
 		panic(exception.NewBadRequestHandler(err.Error()))
 	}
 
-	response, paging := handler.customerService.FindAllPaging(c, dataFilter)
+	fmt.Printf("Bound Query Filter: %+v\n", dataFilter)
+	response, paging := handler.customerService.FindAll(c, dataFilter)
 
 	webResponse := dto.Response{
 		Code:   http.StatusOK,
@@ -267,6 +267,7 @@ func (handler *CustomerController) FindAllPaging(ctx *gin.Context) {
 // @Description	Export Excel customer.
 // @Produce		application/json
 // @Tags		customers
+// @Param	    all		    query	    string	true	"true"
 // @Param		start_date	query		string	false	"start_date"
 // @Param		end_date	query		string	false	"end_date"
 // @Param		username	query		string	false	"username"

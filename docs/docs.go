@@ -377,11 +377,6 @@ const docTemplate = `{
         },
         "/customers": {
             "get": {
-                "security": [
-                    {
-                        "Bearer": []
-                    }
-                ],
                 "description": "Get all customers.",
                 "produces": [
                     "application/json"
@@ -391,6 +386,12 @@ const docTemplate = `{
                 ],
                 "summary": "Get all customers.",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "true/false",
+                        "name": "all",
+                        "in": "query"
+                    },
                     {
                         "type": "string",
                         "description": "limit",
@@ -702,6 +703,13 @@ const docTemplate = `{
                 ],
                 "summary": "Export Excel customer.",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "true",
+                        "name": "all",
+                        "in": "query",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "start_date",

@@ -37,11 +37,12 @@ type CustomerParams struct {
 }
 
 type CustomerQueryFilter struct {
-	Limit     int    `query:"limit"`
-	Page      int    `query:"page"`
-	StartDate string `query:"start_date"`
-	EndDate   string `query:"end_date"`
-	Username  string `query:"username"`
-	Email     string `query:"email"`
-	Sort      string `query:"sort"`
+	All       bool   `form:"all" example:"true"`
+	Limit     int    `form:"limit"`
+	Page      int    `form:"page"`
+	StartDate string `form:"start_date"`
+	EndDate   string `form:"end_date"`
+	Username  string `form:"username"`
+	Email     string `form:"email"`
+	Sort      string `form:"sort"`
 }
