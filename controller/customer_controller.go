@@ -10,6 +10,7 @@ import (
 	"scylla/dto"
 	"scylla/pkg/exception"
 	"scylla/pkg/helper"
+	"scylla/pkg/middleware"
 	"scylla/pkg/utils"
 	"scylla/service"
 	"time"
@@ -26,7 +27,7 @@ func NewCustomerController(customerService service.CustomerService) *CustomerCon
 }
 
 func (controller *CustomerController) Route(app *gin.Engine) {
-	customerRouter := app.Group("/api/v1/customers")
+	customerRouter := app.Group("/api/v1/customers", middleware.JwtMiddleware())
 	customerRouter.GET("", controller.FindAll)
 	customerRouter.GET("/:customerId", controller.FindById)
 	customerRouter.POST("", controller.Create)
@@ -237,6 +238,7 @@ func (handler *CustomerController) FindById(ctx *gin.Context) {
 // @Failure		404	{object}	dto.JsonNotFound{}								"Data not found"
 // @Failure		500	{object}	dto.JsonInternalServerError{}					"Internal server error"
 // @Router		/customers [get]
+// @Security	Bearer
 func (handler *CustomerController) FindAll(ctx *gin.Context) {
 	c, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()

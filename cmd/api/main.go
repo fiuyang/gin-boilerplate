@@ -12,8 +12,8 @@ import (
 	"scylla/dto"
 	"scylla/pkg/config"
 	"scylla/pkg/connection"
+	"scylla/pkg/engine"
 	"scylla/pkg/exception"
-	"scylla/pkg/helper"
 	"scylla/pkg/middleware"
 	"scylla/pkg/utils"
 	"scylla/repository"
@@ -102,6 +102,6 @@ func main() {
 		MaxHeaderBytes: 1 << 20,
 	}
 
-	error := server.ListenAndServe()
-	helper.ErrorPanic(error)
+	// Start the server with graceful shutdown
+	engine.StartServerWithGracefulShutdown(server)
 }
